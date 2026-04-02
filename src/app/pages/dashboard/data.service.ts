@@ -248,7 +248,7 @@ export class DataService {
 
   
   getForemans(): Observable<any[]> {
-    const URL = `${this.route}getForemans`;
+    const URL = `${this.apiBaseUrl}foremen`;
     return this.http.get<any[]>(URL);
   }
 
@@ -257,7 +257,7 @@ export class DataService {
   }
 
   convertToDeleted(projectId: number): Observable<null> {
-    const URL = `${this.route}convert_deleted/`;
+    const URL = `${this.route}delete/`;
     return this.http.put<null>(URL + projectId, {});
   }
 
