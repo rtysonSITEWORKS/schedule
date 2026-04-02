@@ -9,7 +9,7 @@
         width: 205px;
         padding-top: 0;
         font-size: 0;
-        margin-left: 10px;
+        margin-left: 20px;
         img {
             max-height: 44px;
             width: auto;
@@ -17,7 +17,7 @@
     }
 }
 
-#lines{ 
+#lines{
     border-bottom: 7px double;
     border-top: 2px solid;
     border-color: rgba(255, 255, 255, 0.9);
@@ -26,6 +26,8 @@
     width: 20px;
     box-sizing: content-box;
     cursor: pointer;
+    margin-left: 14px;
+    flex-shrink: 0;
     &:hover{
         opacity: 0.8;
     }
