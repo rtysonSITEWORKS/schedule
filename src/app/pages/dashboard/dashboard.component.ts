@@ -56,7 +56,7 @@ export class DashboardComponent {
   readonly col2Width = '300px';
 
   // Gantt zoom — calendar, bars, column text, and row heights all scale together
-  readonly ZOOM_DEFAULT = 60;
+  readonly ZOOM_DEFAULT = 50;
   readonly ZOOM_MIN     = 30;
   readonly ZOOM_MAX     = 300;
   readonly ZOOM_STEP    = 20;
@@ -73,7 +73,7 @@ export class DashboardComponent {
   // Options passed to [viewOptions] on the gantt component
   viewOptions: any = {
     showWeekend: true,
-    cellWidth:   60   // matches ZOOM_DEFAULT
+    cellWidth:   50   // matches ZOOM_DEFAULT
   };
 
   @HostBinding('class.gantt-example-component') hostClass = true;
