@@ -1,630 +1,512 @@
-import {Component, ViewChild, AfterViewInit, ViewEncapsulation, ElementRef, Renderer2, ChangeDetectorRef} from "@angular/core";
+import { Component, ViewChild, ViewEncapsulation, HostBinding } from "@angular/core";
 import {
-  DayPilot,
-  DayPilotCalendarComponent,
-  DayPilotMonthComponent,
-  DayPilotNavigatorComponent
-} from "@daypilot/daypilot-lite-angular";
-import { GanttBarClickEvent, GanttBaselineItem, GanttDragEvent, GanttGroup, GanttItem, GanttLineClickEvent, GanttLinkDragEvent, GanttSelectedEvent, GanttTableDragDroppedEvent, GanttTableDragEndedEvent, GanttTableDragEnterPredicateContext, GanttTableDragStartedEvent, GanttToolbarOptions, GanttView, GanttViewOptions, GanttViewType, NgxGanttComponent, registerView } from "@worktile/gantt";
-import { finalize, of } from 'rxjs';
-import { DashboardService } from "./dashboard.service";
+  GanttBarClickEvent,
+  GanttDate,
+  GanttDragEvent,
+  GanttGroup,
+  GanttItem,
+  GanttViewType,
+  NgxGanttComponent,
+  registerView
+} from "@worktile/gantt";
+import { of } from 'rxjs';
 import { DataService } from "./data.service";
-import { random, randomGroupsAndItems, randomItems } from "./helper";
+import { random, randomItems } from "./helper";
 import { delay } from 'rxjs/operators';
-import { MatMenu, MatMenuTrigger } from "@angular/material/menu";
 import { MatDialog } from "@angular/material/dialog";
 import { ActionNeededComponent } from "./action-needed/action-needed.component";
 import { GanttViewCustom } from "./custom-day-view";
 import { AddTaskComponent } from "./add-task/add-task.component";
 import { EditTaskComponent } from "./edit-task/edit-task.component";
+import { format, parse } from "date-fns";
+import { ExportPdfComponent } from './export-pdf/export-pdf.component';
+
+interface CustomGanttItem extends GanttItem {
+  foreman?: string;
+  isHoliday?: boolean;
+  actionText?: string;
+}
 
 const customViewType = 'custom';
-
 registerView(customViewType, GanttViewCustom);
 
 @Component({
   selector: 'az-dashboard',
   encapsulation: ViewEncapsulation.None,
   templateUrl: './dashboard.component.html',
-  styleUrls: ['./dashboard.component.scss'],
-  providers: [ DashboardService ] 
+  styleUrls: ['./dashboard.component.scss']
 })
+export class DashboardComponent {
 
-export class DashboardComponent implements AfterViewInit { 
+  viewType: GanttViewType = customViewType as GanttViewType;
 
-  viewType = GanttViewType.day;
-  //viewType = customViewType;
+  statusFilters = [
+    { value: 'active',        label: 'Active' },
+    { value: 'onHold',        label: 'On Hold' },
+    { value: 'actionNeeded',  label: 'Action Needed' }
+  ];
 
-  showWeekend = true;
+  foremanFilters: any[] = [];
 
-statusFilters = [
-  { value: 'active', label: 'Active'},
-  { value: 'onHold', label: 'On Hold'},
-  { value: 'actionNeeded', label: 'Action Needed'}
-];
+  expanded  = true;
+  showGantt = false; // stays false until data loads + column widths are calculated
 
-listForemanFilters: any[] = [];
-foremanFilters: any[] = [
+  // Column widths — fixed at these values across all zoom levels
+  readonly col1Width = '400px';
+  readonly col2Width = '300px';
 
-  { firstname: 'Donnell', lastname: 'Soler' },
-  { firstname: 'Norberto', lastname: 'Reyes Hernandez' },
-  { firstname: 'Flavio', lastname: 'Serrano Gonzalez' },
-  { firstname: 'Jose', lastname: 'Resendiz Soto' },
-  { firstname: 'Rendi', lastname: 'Venegas-Cruz' },
-  { firstname: 'Gerardo', lastname: 'Chavez Rojo' },
-  { firstname: 'Thomas', lastname: 'Arthur' },
-  { firstname: 'Francisco', lastname: 'Hernandez' },
-  { firstname: 'Richard', lastname: 'Lovely' },
-  { firstname: 'Chad', lastname: 'White' },
-  { firstname: 'Matt', lastname: 'Gesner' },
-  { firstname: 'Gary', lastname: 'Christie' },
-  { firstname: 'Shaun', lastname: 'Ware' },
-  { firstname: 'Stephen', lastname: 'Fowler' },
-  { firstname: 'Thomas', lastname: 'Burgess' },
-  { firstname: 'David', lastname: 'McDaniel' },
-  { firstname: 'Eric', lastname: 'Rodrigues' },
-  { firstname: 'Brett', lastname: 'Parsley' },
-  { firstname: 'Jonathan', lastname: 'Smith' },
-  { firstname: 'Adam', lastname: 'Hart' },
-  { firstname: 'Darren', lastname: 'McManus' },
-  { firstname: 'Mark', lastname: 'Collins' },
-  { firstname: 'Hager', lastname: 'McCune' },
-  { firstname: 'David', lastname: 'Harwell' },
-  { firstname: 'Keith', lastname: 'Breedlove' },
-  { firstname: 'William', lastname: 'Whitlow' },
-  { firstname: 'Jeffrey', lastname: 'Whittington' },
-  { firstname: 'Margarito', lastname: 'Mejia Romero' },
-  { firstname: 'Nectali', lastname: 'Bueso Canales' },
-  { firstname: 'Henry', lastname: 'Brown' },
-  { firstname: 'Brian', lastname: 'Lemon' },
-  { firstname: 'Jason', lastname: 'Prince' },
-  { firstname: 'Sergio', lastname: 'Almanza Navarro' },
-  { firstname: 'Tyler', lastname: 'Birdsong' },
-  { firstname: 'Carlos', lastname: 'Sanchez Farfan' },
-  { firstname: 'Christopher', lastname: 'Chalk' },
-  { firstname: 'Oscar', lastname: 'Martinez Tobar' },
-  { firstname: 'Christopher', lastname: 'Perry' },
-  { firstname: 'Marco', lastname: 'Avila Pena' },
-  { firstname: 'Brandon', lastname: 'Ledford' },
-  { firstname: 'Kary', lastname: 'Combs' },
-  { firstname: 'Joshua', lastname: 'Coley' },
-  { firstname: 'Daniel', lastname: 'Outwater' },
-  { firstname: 'Mark', lastname: 'Collins' },
-  { firstname: 'Gregory', lastname: 'Leatherman' },
-  { firstname: 'Jeffrey', lastname: 'Turman' },
-  { firstname: 'Benjamin', lastname: 'Hubbard' },
-  { firstname: 'Michael', lastname: 'Romeo' },
-  { firstname: 'Cory', lastname: 'Blackwell' },
-  { firstname: 'Scott', lastname: 'Barbee' },
-  { firstname: 'Richard', lastname: 'Birdsong' },
-  { firstname: 'Lindsay', lastname: 'Austin' },
-  { firstname: 'Rhett', lastname: 'Cox' },
-  { firstname: 'Brandon', lastname: 'Ervin' },
-  { firstname: 'Austin', lastname: 'Locklear' },
-  { firstname: 'David', lastname: 'Mangiamele' },
-  { firstname: 'Donnie', lastname: 'Doster' },
-  { firstname: 'Drew', lastname: 'Barnett' },
-  { firstname: 'Jeff', lastname: 'Crump' }
-  
-]; 
+  // Gantt zoom — calendar, bars, column text, and row heights all scale together
+  readonly ZOOM_DEFAULT = 60;
+  readonly ZOOM_MIN     = 30;
+  readonly ZOOM_MAX     = 300;
+  readonly ZOOM_STEP    = 20;
+  zoomCellWidth = this.ZOOM_DEFAULT;
 
+  statusFilter: string;
+  foremanFilter: string;
 
-isBaselineChecked = false;
+  items: CustomGanttItem[]         = [];
+  originalItems: CustomGanttItem[] = [];
+  groups: GanttGroup[]             = [];
+  originalGroups: GanttGroup[]     = [];
 
-isShowToolbarChecked = true;
-
-loading = false;
-expanded = true;
-showComponent = true;
-
-statusFilter: string;
-statusFilterList: any[] = [];
-
-foremanFilter: string;
-
-items: GanttItem[] = [];
-originalItems: GanttItem[] = [];
-
-groups: GanttGroup[] = [];
-originalGroups: GanttGroup[] = [];
-selectedManager: any;
-
-  baselineItems: GanttBaselineItem[] = [];
-
-  viewOptions = {
-      showWeekend: true,
+  // Options passed to [viewOptions] on the gantt component
+  viewOptions: any = {
+    showWeekend: true,
+    cellWidth:   60   // matches ZOOM_DEFAULT
   };
 
-  dropEnterPredicate = (event: GanttTableDragEnterPredicateContext) => {
-    return true;
-};
-
-
+  @HostBinding('class.gantt-example-component') hostClass = true;
   @ViewChild('gantt') ganttComponent: NgxGanttComponent;
-  @ViewChild('menuTrigger') menuTrigger!: MatMenuTrigger;
-  menuPosition: { x: string, y: string } = { x: '0px', y: '0px' };
 
-  selectedItem: any;
+  selectedItem: CustomGanttItem | null = null;
 
+  // ── Hover tooltip ─────────────────────────────────────────────────────────
+  tooltipVisible = false;
+  tooltipItem: CustomGanttItem | null = null;
+  tooltipX = 0;
+  tooltipY = 0;
 
-  constructor(private ds: DataService, private el: ElementRef, private renderer: Renderer2, private cdr: ChangeDetectorRef, public dialog: MatDialog) {
+  // ── Empty-space right-click menu ──────────────────────────────────────────
+  emptyMenuVisible = false;
+  emptyMenuX       = 0;
+  emptyMenuY       = 0;
+  emptyMenuDate: Date | null = null;
 
+  // ── Drag date label ───────────────────────────────────────────────────────
+  isDragging    = false;
+  dragDateLabel = '';
+  dragLabelX    = 0;
+  dragLabelY    = 0;
+
+  /** All size tokens derived from zoom, calibrated so 60px cell = clean round numbers:
+   *  font=21px  |  task-row=50px  |  bar=42px  |  group-row=35px */
+  get barFontSize(): string  { return Math.round(this.zoomCellWidth * 0.35) + 'px'; }
+  get ganttStyles(): { lineHeight: number; barHeight: number } {
+    return {
+      lineHeight: Math.round(this.zoomCellWidth * 0.833),  // 60px → 50px
+      barHeight:  Math.round(this.zoomCellWidth * 0.70)    // 60px → 42px (4px gap each side)
+    };
   }
+  /** Group header rows match task row height — calibrated so 60px zoom = 50px */
+  get ganttGroupHeight(): string {
+    return Math.round(this.zoomCellWidth * 0.833) + 'px';
+  }
+
+  private nameDictionary: { [key: string]: string } = {};
+
+  constructor(private ds: DataService, public dialog: MatDialog) {}
 
   ngOnInit(): void {
-    this.foremanFilters = this.foremanFilters.map(item => {
-      return {
+    this.ds.getForemans().subscribe((data: any[]) => {
+      this.foremanFilters = data.map(item => ({
         label: `${item.firstname} ${item.lastname}`,
         value: `${item.firstname} ${item.lastname}`
-      };
+      }));
     });
-    //this.ds.createRandomProjects(10);
-    this.ds.getDict().subscribe((data) => {
+    this.loadChart();
+  }
+
+  loadChart(): void {
+    this.ds.getDict().subscribe((data: any) => {
       this.nameDictionary = data;
-      this.ds.getAllItems().subscribe((data) => {
+      this.ds.getAllItems().subscribe((data: any) => {
+        const parsedItems = data.items.map((item: any) => ({
+          ...item,
+          start: this.parseDateWithoutGMT(item.start),
+          end:   this.parseDateWithoutGMT(item.end)
+        }));
+        const formattedItems = parsedItems.map((item: any) => ({
+          ...item,
+          start: format(item.start, 'dd MMM yyyy HH:mm:ss'),
+          end:   format(item.end,   'dd MMM yyyy HH:mm:ss')
+        }));
         this.groups = data.groups;
-        this.items = data.items;
+        this.items  = formattedItems;
         this.items.forEach(task => {
-          task.foreman = this.getManagerName(task.id);
+          task.foreman   = this.getManagerName(task.id);
+          task.isHoliday = Number(task.group_id) === -1;
+          task.draggable = !task.isHoliday;
         });
-        
         this.originalGroups = [...this.groups];
-        this.originalItems = [...this.items];
+        this.originalItems  = [...this.items];
+        this.showGantt = false;
+        setTimeout(() => {
+          this.showGantt = true;
+          setTimeout(() => {
+            this.addWeekendShading();
+            this.ganttComponent?.scrollToToday();
+          }, 300);
+        }, 30);
       });
     });
-    
   }
-  contextMenuPosition = { x: '0px', y: '0px' };
 
-  updateManager(manager:any){
-
+  zoomIn(): void {
+    this.zoomCellWidth = Math.min(this.zoomCellWidth + this.ZOOM_STEP, this.ZOOM_MAX);
+    this.applyZoom();
   }
-  
+
+  zoomOut(): void {
+    this.zoomCellWidth = Math.max(this.zoomCellWidth - this.ZOOM_STEP, this.ZOOM_MIN);
+    this.applyZoom();
+  }
+
+  zoomReset(): void {
+    this.zoomCellWidth = this.ZOOM_DEFAULT;
+    this.applyZoom();
+  }
+
+  private applyZoom(): void {
+    this.viewOptions = { ...this.viewOptions, cellWidth: this.zoomCellWidth };
+    this.showGantt = false;
+    setTimeout(() => {
+      this.showGantt = true;
+      setTimeout(() => {
+        this.addWeekendShading();
+        this.ganttComponent?.scrollToToday();
+      }, 300);
+    }, 30);
+  }
+
+  addWeekendShading(): void {
+    const svg = document.querySelector('.gantt-calendar-grid-main');
+    if (!svg) return;
+
+    svg.querySelectorAll('.weekend-shade').forEach(el => el.remove());
+
+    const cellWidth = this.zoomCellWidth;
+    const svgWidth  = parseInt(svg.getAttribute('width') || '0');
+
+    // View starts on Monday (weekStartsOn: 1): index % 7 → 0=Mon … 5=Sat, 6=Sun
+    for (let i = 0; i * cellWidth < svgWidth; i++) {
+      const dayOfWeek = i % 7;
+      if (dayOfWeek === 5 || dayOfWeek === 6) {
+        const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+        rect.setAttribute('x',      (i * cellWidth).toString());
+        rect.setAttribute('y',      '0');
+        rect.setAttribute('width',  cellWidth.toString());
+        rect.setAttribute('height', '5000');
+        rect.setAttribute('fill',   'rgba(0, 0, 0, 0.09)');
+        rect.setAttribute('class',  'weekend-shade');
+        svg.insertBefore(rect, svg.firstChild);
+      }
+    }
+  }
+
+  private parseDateWithoutGMT(dateString: string): Date {
+    return new Date(dateString.replace(' GMT', ''));
+  }
+
+  generatePDF(): void {
+    this.dialog.open(ExportPdfComponent, {
+      width: '520px',
+      data: {
+        items:          this.originalItems,
+        groups:         this.originalGroups,
+        nameDictionary: this.nameDictionary
+      }
+    });
+  }
+
+  // ── Tooltip ───────────────────────────────────────────────────────────────
+  showTooltip(event: MouseEvent, item: CustomGanttItem): void {
+    this.tooltipItem    = item;
+    this.tooltipVisible = true;
+    this.positionTooltip(event);
+  }
+
+  positionTooltip(event: MouseEvent): void {
+    const pad = 14;
+    const tw  = 230;
+    this.tooltipX = event.clientX + pad + tw > window.innerWidth
+      ? event.clientX - tw - pad
+      : event.clientX + pad;
+    this.tooltipY = Math.min(event.clientY - 10, window.innerHeight - 160);
+  }
+
+  hideTooltip(): void { this.tooltipVisible = false; }
+
+  tooltipStatus(item: CustomGanttItem): string {
+    if (item?.color === '#FF0000') return 'On Hold';
+    if (item?.color === '#E1CA00') return 'Action Needed';
+    return 'Active';
+  }
+
+  tooltipStatusColor(item: CustomGanttItem): string {
+    if (item?.color === '#FF0000') return '#c62828';
+    if (item?.color === '#E1CA00') return '#e65100';
+    return '#2e7d32';
+  }
+
+  /** Convert a gantt date value (unix seconds OR formatted string) to milliseconds */
+  private ganttValToMs(val: any): number {
+    if (!val) return 0;
+    if (typeof val === 'number') return val * 1000;
+    try {
+      return parse((val as string).trim(), 'dd MMM yyyy HH:mm:ss', new Date()).getTime();
+    } catch { return 0; }
+  }
+
+  tooltipFormatDate(val: any): string {
+    if (!val) return '—';
+    const ms = this.ganttValToMs(val);
+    if (!ms) return '—';
+    return format(new Date(ms), 'MMM d, yyyy');
+  }
+
+  tooltipDuration(item: CustomGanttItem): string {
+    if (!item?.start || !item?.end) return '—';
+    const days = Math.round((this.ganttValToMs(item.end) - this.ganttValToMs(item.start)) / 86400000);
+    return days > 0 ? `${days} day${days !== 1 ? 's' : ''}` : '< 1 day';
+  }
+
+  // ── Date from gantt x-position ────────────────────────────────────────────
+  private getDateFromGanttClick(event: MouseEvent): Date {
+    const mc = document.querySelector('gantt-main') as HTMLElement;
+    if (!mc) return new Date();
+    const rect = mc.getBoundingClientRect();
+    const x    = event.clientX - rect.left + mc.scrollLeft;
+    const day  = Math.floor(x / this.zoomCellWidth);
+    const base = new GanttDate().startOfYear().addYears(-1).startOfWeek({ weekStartsOn: 1 }).value;
+    const d    = new Date(base);
+    d.setDate(d.getDate() + day);
+    return d;
+  }
+
+  // ── Right-click context menu ───────────────────────────────────────────────
   onGanttContextMenu(event: MouseEvent): void {
     event.preventDefault();
-    this.contextMenuPosition.x = event.clientX + 'px';
-    this.contextMenuPosition.y = event.clientY + 'px';
-    // Ensure that the contextMenu is not undefined before accessing the menu
+    const target = event.target as HTMLElement;
+    // If on a bar let CDK handle it; bars use left-click so right-click closes any open menu
+    if (target.closest('.gantt-bar') || target.closest('.gantt-bar-content')) return;
 
-  }
- 
+    // Only show in the calendar/bar area, not the left table panel
+    const mc = document.querySelector('gantt-main') as HTMLElement;
+    if (!mc) return;
+    if (event.clientX < mc.getBoundingClientRect().left) return;
 
-  onContextMenuClick(option: string): void {
-    console.log(`Clicked on: ${option}`);
-    // Implement your logic for each context menu option
-  }
-
-
-  onBeforeEventRender(args: any) {
-      const dp = args.control;
-      args.data.areas = [
-        {
-          top: 3,
-          right: 3,
-          width: 20,
-          height: 20,
-          symbol: "assets/icons/daypilot.svg#minichevron-down-2",
-          fontColor: "#fff",
-          toolTip: "Show context menu",
-          action: "ContextMenu",
-        },
-        {
-          top: 3,
-          right: 25,
-          width: 20,
-          height: 20,
-          symbol: "assets/icons/daypilot.svg#x-circle",
-          fontColor: "#fff",
-          action: "None",
-          toolTip: "Delete event",
-          onClick: async (args: any)   => {
-            dp.events.remove(args.source);
-          }
-        }
-      ];
-
-      args.data.areas.push({
-        bottom: 5,
-        left: 5,
-        width: 36,
-        height: 36,
-        action: "None",
-        image: `https://picsum.photos/36/36?random=${args.data.id}`,
-        style: "border-radius: 50%; border: 2px solid #fff; overflow: hidden;",
-      });
+    this.emptyMenuDate    = this.getDateFromGanttClick(event);
+    this.emptyMenuX       = Math.min(event.clientX, window.innerWidth  - 210);
+    this.emptyMenuY       = Math.min(event.clientY, window.innerHeight - 80);
+    this.emptyMenuVisible = true;
   }
 
-  async onTimeRangeSelected(args: any) {
-    const modal = await DayPilot.Modal.prompt("Create a new event:", "Event 1");
-    const dp = args.control;
-    dp.clearSelection();
-    if (!modal.result) { return; }
-    dp.events.add(new DayPilot.Event({
-      start: args.start,
-      end: args.end,
-      id: DayPilot.guid(),
-      text: modal.result
-    }));
+  closeEmptyMenu(): void {
+    this.emptyMenuVisible = false;
+    this.emptyMenuDate    = null;
   }
 
-  async onEventClick(args: any) {
-
-  }
-
-  ngAfterViewInit() {
-
-}
-
-barClick(event: GanttBarClickEvent) {
-    this.selectedItem = event.item;
-}
-filter() {
-  this.items = this.originalItems;
-  if(this.statusFilter == "onHold"){
-    this.items = this.items.filter(item => item.color === '#FF0000');
-  }
-  if(this.statusFilter == "actionNeeded"){
-    this.items = this.items.filter(item => item.color === '#E1CA00');
-  }
-  if(this.statusFilter == "active"){
-    this.items = this.items.filter(item => item.color !== '#E1CA00' && item.color !== '#FF0000');
-  }
-  if(this.foremanFilter != null && this.foremanFilter != ''){
-    this.items = this.items.filter(item => this.getManagerName(item.group_id) === this.foremanFilter);
-  }
-  this.items=[...this.items]; 
-}
-onFilterChangeStatus(event: any): void {   
-     
-  this.filter();
-}
-
-activeButtonClick(): void {
-    const foundItem = this.items.find(item => item.id === this.selectedItem.id);
-    if (foundItem) {
-        //if its on hold we need to do entire group else just the 1
-        if(foundItem.actionText != null){
-          foundItem.title = foundItem.title.replace(foundItem.actionText, '');
-          foundItem.actionText = null;
-        }
-        foundItem.color = null;
-
-        this.ds.convertToActive(parseInt(foundItem.id)).subscribe(
-          (response) => {
-            console.log('Project status updated successfully:', response);
-          },
-          (error) => {
-            console.error('Error updating project status:', error);
-          }
-        );
-        this.items=[...this.items]; 
-    }
-      // if its action needed remove text
-      
-}
-actionNeededButtonClick(): void {
-    const foundItem = this.items.find(item => item.id === this.selectedItem.id);
-    if (foundItem) {
-        const dialogRef = this.dialog.open(ActionNeededComponent, {
-            width: '1000px',
-            height: '300px'
-            // Add any additional configuration options as needed
-          });
-      
-          dialogRef.afterClosed().subscribe((reason: any) => {
-            foundItem.color = '#E1CA00';
-            let reasonString = reason.reason + " : ";
-            foundItem.title = reasonString + foundItem.title;
-            foundItem.actionText = reasonString;
-            this.items=[...this.items];
-
-            this.ds.convertToActionNeeded(parseInt(foundItem.id), reasonString).subscribe(
-              (response) => {
-                console.log('Project status updated successfully:', response);
-              },
-              (error) => {
-                console.error('Error updating project status:', error);
-              }
-            );
-          });
-      // Modify the color property of the found item
-      
-    } else {
-      console.log('Item not found');
-    }
-}
-editButtonClick(): void {
-  const foundItem = this.items.find(item => item.id === this.selectedItem.id);
-  if (foundItem) {
-      const dialogRef = this.dialog.open(EditTaskComponent, {
-          width: '1000px',
-          height: '300px',
-          data: { foundItem }
-          // Add any additional configuration options as needed
-        });
-    
-        dialogRef.afterClosed().subscribe((reason: any) => {
-          this.ds.getDict().subscribe((data) => {
-            this.nameDictionary = data;
-            this.ds.getAllItems().subscribe((data) => {
-              this.groups = data.groups;
-              this.items = data.items;
-              this.items.forEach(task => {
-                task.foreman = this.getManagerName(task.id);
-              });
-              
-              this.originalGroups = [...this.groups];
-              this.originalItems = [...this.items];
-            });
-          });
-        });
-    // Modify the color property of the found item
-    
-  } else {
-    console.log('Item not found');
-  }
-}
-onHoldButtonClick(): void {
-    const foundItem = this.items.find(item => item.id === this.selectedItem.id);
-    if(foundItem){
-      foundItem.color = '#FF0000';
-      if(foundItem.actionText != null){
-        foundItem.title = foundItem.title.replace(foundItem.actionText, '');
-        foundItem.actionText = null;
-      }
-      this.items=[...this.items];
-    }
-    this.ds.convertToOnHold(parseInt(foundItem.id)).subscribe(
-      (response) => {
-        console.log('Project status updated successfully:', response);
-      },
-      (error) => {
-        console.error('Error updating project status:', error);
-      }
-    );
-}
-completedButtonClick(): void { 
-  if(confirm("Are you sure to complete the Project?")) {
-    const foundItem = this.items.find(item => item.id === this.selectedItem.id);
-    const groupId = foundItem.group_id;
-    this.items = this.items.filter(item => item.group_id !== groupId);
-    this.originalItems = this.originalItems.filter(item => item.group_id !== groupId);
-    this.groups = this.groups.filter(group => group.id !== groupId);
-    this.originalGroups = this.originalGroups.filter(group => group.id !== groupId);
-    this.ds.convertToComplete(parseInt(foundItem.group_id)).subscribe(
-      (response) => {
-        console.log('Project status updated successfully:', response);
-      },
-      (error) => {
-        console.error('Error updating project status:', error);
-      }
-    );
-    this.items=[...this.items];
-    this.groups=[...this.groups];
-  }
-    
-}
-ngOnDestroy(): void {
-    console.log('Component destroyed');
-  }
-onContextMenu(event: MouseEvent): void {
-    event.preventDefault();
-
-    // Calculate the cursor position
-    this.menuPosition.x = event.clientX + 'px';
-    this.menuPosition.y = event.clientY + 'px';
-
-    // Open the context menu using MatMenuTrigger
-    this.menuTrigger.openMenu();
-  }
-
-private nameDictionary: { [key: string]: string } = {};
-
-getRandomName(): string {
-  const randomIndex = Math.floor(Math.random() * this.users.length);
-  const randomUser = this.users[randomIndex];
-  return `${randomUser.firstname} ${randomUser.lastname}`;
-}
-
-getManagerName(item: any): string {
-  if (!this.nameDictionary[item]) {
-    // If the item is not in the dictionary, generate a random name and store it
-    return ""
-  }
-  else{
-    return this.nameDictionary[item];
-  }
-
-
-}
-
-users: any[] = [
-
-  { firstname: 'Donnell', lastname: 'Soler' },
-  { firstname: 'Norberto', lastname: 'Reyes Hernandez' },
-  { firstname: 'Flavio', lastname: 'Serrano Gonzalez' },
-  { firstname: 'Jose', lastname: 'Resendiz Soto' },
-  { firstname: 'Rendi', lastname: 'Venegas-Cruz' },
-  { firstname: 'Gerardo', lastname: 'Chavez Rojo' },
-  { firstname: 'Thomas', lastname: 'Arthur' },
-  { firstname: 'Francisco', lastname: 'Hernandez' },
-  { firstname: 'Richard', lastname: 'Lovely' },
-  { firstname: 'Chad', lastname: 'White' },
-  { firstname: 'Matt', lastname: 'Gesner' },
-  { firstname: 'Gary', lastname: 'Christie' },
-  { firstname: 'Shaun', lastname: 'Ware' },
-  { firstname: 'Stephen', lastname: 'Fowler' },
-  { firstname: 'Thomas', lastname: 'Burgess' },
-  { firstname: 'David', lastname: 'McDaniel' },
-  { firstname: 'Eric', lastname: 'Rodrigues' },
-  { firstname: 'Brett', lastname: 'Parsley' },
-  { firstname: 'Jonathan', lastname: 'Smith' },
-  { firstname: 'Adam', lastname: 'Hart' },
-  { firstname: 'Darren', lastname: 'McManus' },
-  { firstname: 'Mark', lastname: 'Collins' },
-  { firstname: 'Hager', lastname: 'McCune' },
-  { firstname: 'David', lastname: 'Harwell' },
-  { firstname: 'Keith', lastname: 'Breedlove' },
-  { firstname: 'William', lastname: 'Whitlow' },
-  { firstname: 'Jeffrey', lastname: 'Whittington' },
-  { firstname: 'Margarito', lastname: 'Mejia Romero' },
-  { firstname: 'Nectali', lastname: 'Bueso Canales' },
-  { firstname: 'Henry', lastname: 'Brown' },
-  { firstname: 'Brian', lastname: 'Lemon' },
-  { firstname: 'Jason', lastname: 'Prince' },
-  { firstname: 'Sergio', lastname: 'Almanza Navarro' },
-  { firstname: 'Tyler', lastname: 'Birdsong' },
-  { firstname: 'Carlos', lastname: 'Sanchez Farfan' },
-  { firstname: 'Christopher', lastname: 'Chalk' },
-  { firstname: 'Oscar', lastname: 'Martinez Tobar' },
-  { firstname: 'Christopher', lastname: 'Perry' },
-  { firstname: 'Marco', lastname: 'Avila Pena' },
-  { firstname: 'Brandon', lastname: 'Ledford' },
-  { firstname: 'Kary', lastname: 'Combs' },
-  { firstname: 'Joshua', lastname: 'Coley' },
-  { firstname: 'Daniel', lastname: 'Outwater' },
-  { firstname: 'Mark', lastname: 'Collins' },
-  { firstname: 'Gregory', lastname: 'Leatherman' },
-  { firstname: 'Jeffrey', lastname: 'Turman' },
-  { firstname: 'Benjamin', lastname: 'Hubbard' },
-  { firstname: 'Michael', lastname: 'Romeo' },
-  { firstname: 'Cory', lastname: 'Blackwell' },
-  { firstname: 'Scott', lastname: 'Barbee' },
-  { firstname: 'Richard', lastname: 'Birdsong' },
-  { firstname: 'Lindsay', lastname: 'Austin' },
-  { firstname: 'Rhett', lastname: 'Cox' },
-  { firstname: 'Brandon', lastname: 'Ervin' },
-  { firstname: 'Austin', lastname: 'Locklear' },
-  { firstname: 'David', lastname: 'Mangiamele' },
-  { firstname: 'Donnie', lastname: 'Doster' },
-  { firstname: 'Drew', lastname: 'Barnett' },
-  { firstname: 'Jeff', lastname: 'Crump' }
-  
-]; 
-
-
-lineClick(event: GanttLineClickEvent) {
-    //this.thyNotify.info('Event: lineClick', `你点击了 ${event.source.title} 到 ${event.target.title} 的关联线`);
-}
-
-dragMoved(event: GanttDragEvent) {
-}
-
-dragEnded(event: GanttDragEvent) {
-    this.ds.updateTask(event.item);
-    this.ds.updateTask(event.item).subscribe(
-      (response) => {
-        console.log('Project status updated successfully:', response);
-      },
-      (error) => {
-        console.error('Error updating project status:', error);
-      }
-    );
-}
-
-selectedChange(event: GanttSelectedEvent) {
-    // this.thyNotify.info(
-    //     'Event: selectedChange',
-    //     `当前选中的 item 的 id 为 ${(event.selectedValue as GanttItem[]).map((item) => item.id).join('、')}`
-    // );
-}
-
-linkDragEnded(event: GanttLinkDragEvent) {
-    this.items = [...this.items];
-    //this.thyNotify.info('Event: linkDragEnded', `创建了关联关系`);
-}
-
-print(name: string) {
-    //this.printService.print(name);
-}
-
-scrollToToday() {
-    this.ganttComponent.scrollToToday();
-}
-
-switchChange() {
-    if (this.isBaselineChecked) {
-        this.baselineItems = [
-            { id: '000000', start: 1627728888, end: 1628421197 },
-            { id: '000001', start: 1617361997, end: 1625483597 },
-            { id: '000002', start: 1610536397, end: 1610622797 },
-            { id: '000003', start: 1628507597, end: 1633345997 },
-            { id: '000004', start: 1624705997 }
-        ];
-    } else {
-        this.baselineItems = [];
-    }
-}
-
-
-  onDragDropped(event: GanttTableDragDroppedEvent) {
-
-      const sourceItems = event.sourceParent?.children || this.items;
-      sourceItems.splice(sourceItems.indexOf(event.source), 1);
-      if (event.dropPosition === 'inside') {
-          event.target.children = [...(event.target.children || []), event.source];
-      } else {
-          const targetItems = event.targetParent?.children || this.items;
-          if (event.dropPosition === 'before') {
-              targetItems.splice(targetItems.indexOf(event.target), 0, event.source);
-          } else {
-              targetItems.splice(targetItems.indexOf(event.target) + 1, 0, event.source);
-          }
-      }
-      this.items = [...this.items];
-  }
-
-  onDragStarted(event: GanttTableDragStartedEvent) {
-      console.log('drag wstarted', event);  }
-
-  onDragEnded(event: GanttTableDragEndedEvent) {
-
-  }
-
-  addTask() {
+  addTaskAtDate(): void {
+    const date = this.emptyMenuDate;
+    this.closeEmptyMenu();
     const dialogRef = this.dialog.open(AddTaskComponent, {
       width: '1500px',
-      height: '300px'
-      // Add any additional configuration options as needed
+      height: '300px',
+      data: { defaultStart: date, defaultEnd: date }
     });
+    dialogRef.afterClosed().subscribe(() => this.loadChart());
+  }
 
+  // ── Drag feedback ──────────────────────────────────────────────────────────
+  onDragStarted(_event: GanttDragEvent): void {
+    this.isDragging = true;
+  }
+
+  onGanttMouseMove(event: MouseEvent): void {
+    if (!this.isDragging) return;
+    const d = this.getDateFromGanttClick(event);
+    this.dragDateLabel = format(d, 'EEE, MMM d yyyy');
+    this.dragLabelX    = event.clientX + 14;
+    this.dragLabelY    = event.clientY - 42;
+  }
+
+  filter(): void {
+    this.items = [...this.originalItems];
+
+    if (this.statusFilter === 'onHold') {
+      this.items = this.items.filter(item => item.color === '#FF0000');
+    } else if (this.statusFilter === 'actionNeeded') {
+      this.items = this.items.filter(item => item.color === '#E1CA00');
+    } else if (this.statusFilter === 'active') {
+      this.items = this.items.filter(item => item.color !== '#E1CA00' && item.color !== '#FF0000');
+    }
+
+    if (this.foremanFilter) {
+      this.items = this.items.filter(item => this.getManagerName(item.id) === this.foremanFilter);
+    }
+  }
+
+  onFilterChangeStatus(): void {
+    this.filter();
+  }
+
+  barClick(event: GanttBarClickEvent): void {
+    this.selectedItem = event.item as CustomGanttItem;
+  }
+
+  activeButtonClick(): void {
+    const foundItem = this.items.find(item => item.id === this.selectedItem?.id);
+    if (!foundItem) return;
+
+    if (foundItem.actionText) {
+      foundItem.title    = foundItem.title.replace(foundItem.actionText, '');
+      foundItem.actionText = null;
+    }
+    foundItem.color = null;
+    this.items = [...this.items];
+
+    this.ds.convertToActive(parseInt(foundItem.id)).subscribe({
+      error: err => console.error('Error updating project status:', err)
+    });
+  }
+
+  actionNeededButtonClick(): void {
+    const foundItem = this.items.find(item => item.id === this.selectedItem?.id);
+    if (!foundItem) return;
+
+    const dialogRef = this.dialog.open(ActionNeededComponent, { width: '1000px', height: '300px' });
     dialogRef.afterClosed().subscribe((reason: any) => {
-      this.ds.getDict().subscribe((data) => {
-        this.nameDictionary = data;
-        this.ds.getAllItems().subscribe((data) => {
-          this.groups = data.groups;
-          this.items = data.items;
-          this.items.forEach(task => {
-            task.foreman = this.getManagerName(task.id);
-          });
-          
-          this.originalGroups = [...this.groups];
-          this.originalItems = [...this.items];
-        });
+      if (!reason) return;
+      const reasonString   = `${reason.reason} : `;
+      foundItem.color      = '#E1CA00';
+      foundItem.title      = reasonString + foundItem.title;
+      foundItem.actionText = reasonString;
+      this.items = [...this.items];
+
+      this.ds.convertToActionNeeded(parseInt(foundItem.id), reasonString).subscribe({
+        error: err => console.error('Error updating project status:', err)
       });
     });
   }
 
-  expandAllGroups() {
-    if (this.expanded) {
-        this.expanded = false;
-        this.ganttComponent.collapseAll();
-    } else {
-        this.expanded = true;
-        this.ganttComponent.expandAll();
+  editButtonClick(): void {
+    const foundItem = this.items.find(item => item.id === this.selectedItem?.id);
+    if (!foundItem) return;
+
+    const dialogRef = this.dialog.open(EditTaskComponent, {
+      width: '1000px',
+      height: '300px',
+      data: { foundItem }
+    });
+    dialogRef.afterClosed().subscribe(() => this.loadChart());
+  }
+
+  onHoldButtonClick(): void {
+    const foundItem = this.items.find(item => item.id === this.selectedItem?.id);
+    if (!foundItem) return;
+
+    if (foundItem.actionText) {
+      foundItem.title    = foundItem.title.replace(foundItem.actionText, '');
+      foundItem.actionText = null;
     }
+    foundItem.color = '#FF0000';
+    this.items = [...this.items];
+
+    this.ds.convertToOnHold(parseInt(foundItem.id)).subscribe({
+      error: err => console.error('Error updating project status:', err)
+    });
+  }
+
+  completedButtonClick(): void {
+    if (!confirm('Are you sure you want to complete this project?')) return;
+
+    const foundItem = this.items.find(item => item.id === this.selectedItem?.id);
+    if (!foundItem) return;
+
+    const { group_id } = foundItem;
+    this.items         = this.items.filter(item => item.group_id !== group_id);
+    this.originalItems = this.originalItems.filter(item => item.group_id !== group_id);
+    this.groups        = this.groups.filter(group => group.id !== group_id);
+    this.originalGroups = this.originalGroups.filter(group => group.id !== group_id);
+
+    this.ds.convertToComplete(parseInt(group_id)).subscribe({
+      error: err => console.error('Error completing project:', err)
+    });
+  }
+
+  deletedButtonClick(): void {
+    if (!confirm('Are you sure you want to delete this task?')) return;
+
+    const foundItem = this.items.find(item => item.id === this.selectedItem?.id);
+    if (!foundItem) return;
+
+    this.ds.convertToDeleted(parseInt(foundItem.id)).subscribe({
+      next:  () => this.loadChart(),
+      error: err => console.error('Error deleting task:', err)
+    });
+  }
+
+  deletedMenuButtonClick(item: any): void {
+    if (!confirm('Are you sure you want to delete this task?')) return;
+
+    const foundItem = this.items.find(itm => itm.id === item.id);
+    if (!foundItem) return;
+
+    this.ds.convertToDeleted(parseInt(foundItem.id)).subscribe({
+      next:  () => this.loadChart(),
+      error: err => console.error('Error deleting task:', err)
+    });
+  }
+
+  getManagerName(itemId: any): string {
+    return this.nameDictionary[itemId] ?? '';
+  }
+
+  dragEnded(event: GanttDragEvent): void {
+    this.isDragging    = false;
+    this.dragDateLabel = '';
+    const adjustedItem = {
+      ...event.item,
+      start: new Date((event.item.start as number) * 1000).toLocaleString(),
+      end:   new Date((event.item.end   as number) * 1000).toLocaleString()
+    };
+    this.ds.updateTask(adjustedItem).subscribe({
+      next:  () => this.loadChart(),
+      error: () => this.loadChart()
+    });
+  }
+
+  addTask(): void {
+    const dialogRef = this.dialog.open(AddTaskComponent, { width: '1500px', height: '300px' });
+    dialogRef.afterClosed().subscribe(() => this.loadChart());
+  }
+
+  expandAllGroups(): void {
+    if (this.expanded) {
+      this.expanded = false;
+      this.ganttComponent.collapseAll();
+    } else {
+      this.expanded = true;
+      this.ganttComponent.expandAll();
+    }
+  }
+
+  scrollToToday(): void {
+    this.ganttComponent.scrollToToday();
+  }
+
+  childrenResolve = (item: GanttItem) => {
+    return of(randomItems(random(1, 5), item)).pipe(delay(1000));
+  };
 }
-
-childrenResolve = (item: GanttItem) => {
-    const children = randomItems(random(1, 5), item);
-    return of(children).pipe(delay(1000));
-};
-
-
-}
-
-
-
-
-
-

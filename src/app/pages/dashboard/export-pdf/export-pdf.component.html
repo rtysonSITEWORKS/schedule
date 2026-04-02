@@ -1,0 +1,60 @@
+<div class="export-wrapper">
+
+  <div class="export-header">
+    <span class="export-icon">📄</span>
+    <span class="export-title">Export Project Schedule</span>
+  </div>
+
+  <div class="export-body">
+
+    <p class="export-desc">
+      Generates a formatted PDF of all active projects and tasks, ready to attach and email.
+    </p>
+
+    <div class="export-summary">
+      <div class="summary-chip">
+        <span class="chip-value">{{ projectCount }}</span>
+        <span class="chip-label">Projects</span>
+      </div>
+      <div class="summary-chip">
+        <span class="chip-value">{{ taskCount }}</span>
+        <span class="chip-label">Tasks</span>
+      </div>
+      <div class="summary-chip">
+        <span class="chip-value">Landscape</span>
+        <span class="chip-label">Orientation</span>
+      </div>
+      <div class="summary-chip">
+        <span class="chip-value">US Letter</span>
+        <span class="chip-label">Page Size</span>
+      </div>
+    </div>
+
+    <div class="filename-row">
+      <label class="filename-label">Filename</label>
+      <div class="filename-input-group">
+        <input
+          class="filename-input"
+          [(ngModel)]="filename"
+          placeholder="Project_Schedule_2025-01-01" />
+        <span class="pdf-suffix">.pdf</span>
+      </div>
+    </div>
+
+    <div class="export-legend">
+      <span class="legend-item active">● Active</span>
+      <span class="legend-item on-hold">● On Hold</span>
+      <span class="legend-item action-needed">● Action Needed</span>
+    </div>
+
+  </div>
+
+  <div class="export-footer">
+    <button class="btn-cancel" (click)="cancel()" [disabled]="exporting">Cancel</button>
+    <button class="btn-export" (click)="export()" [disabled]="exporting || !filename">
+      <span *ngIf="!exporting">⬇ Export PDF</span>
+      <span *ngIf="exporting">Generating…</span>
+    </button>
+  </div>
+
+</div>

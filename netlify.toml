@@ -1,0 +1,13 @@
+[build]
+  command = "npm run build"
+  publish = "docs"
+
+[build.environment]
+  NODE_VERSION = "20"
+
+# Angular is a single-page app — route all requests to index.html
+# so the Angular router handles deep links and page refreshes correctly
+[[redirects]]
+  from   = "/*"
+  to     = "/index.html"
+  status = 200

@@ -1,8 +1,7 @@
 import {Injectable} from "@angular/core";
 import {Observable} from "rxjs";
-import {DayPilot} from "@daypilot/daypilot-lite-angular";
 import {HttpClient} from "@angular/common/http";
-import { random, randomGroupsAndItems } from "./helper";
+import { random } from "./helper";
 import { addDays, GanttGroup, GanttItem, getUnixTime } from "@worktile/gantt";
 import { environment } from "src/environments/environment";
 import { Project } from "src/app/logic/models/project";
@@ -157,7 +156,6 @@ export class DataService {
       title: project.name
     })
     project.tasks.forEach(task => {
-      console.log(task);
       this.items.push({
         id: `${group_id}${Math.floor(Math.random() * 100000000)}`,
         title: `${task.task}`,
@@ -167,7 +165,6 @@ export class DataService {
         expandable: true,
     });
     });
-    console.log(project.tasks);
   }
 
   createProjectApi(project: any): Observable<null>{

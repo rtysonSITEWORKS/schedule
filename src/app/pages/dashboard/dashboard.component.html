@@ -4,74 +4,202 @@
     <button class="example-menu-item" cdkMenuItem (click)="actionNeededButtonClick()">Action Needed</button>
     <button class="example-menu-item" cdkMenuItem (click)="onHoldButtonClick()">On Hold</button>
     <button class="example-menu-item" cdkMenuItem (click)="completedButtonClick()">Completed</button>
+    <button class="example-menu-item" cdkMenuItem (click)="deletedButtonClick()">Delete</button>
     <button class="example-menu-item" cdkMenuItem (click)="editButtonClick()">Edit Task</button>
   </div>
 </ng-template>
-<div class="container" style="height: 100vh; width: 100vw;" (contextmenu)="onContextMenu($event)" *ngIf="showComponent">
-  <div class="row">
+<ng-template #columnMenu let-item="item">
+  <div class="example-menu" cdkMenu>
+    <button class="example-menu-item" cdkMenuItem (click)="deletedMenuButtonClick(item)">Delete</button>
+  </div>
+</ng-template>
+
+<!-- ── Hover tooltip ─────────────────────────────────────────────────────── -->
+<div *ngIf="tooltipVisible && tooltipItem"
+     class="bar-tooltip"
+     [style.left.px]="tooltipX"
+     [style.top.px]="tooltipY">
+  <div class="bt-title">{{ tooltipItem.title }}</div>
+  <div class="bt-row"><span class="bt-label">Foreman</span><span>{{ getManagerName(tooltipItem.id) || '—' }}</span></div>
+  <div class="bt-row"><span class="bt-label">Start</span><span>{{ tooltipFormatDate(tooltipItem.start) }}</span></div>
+  <div class="bt-row"><span class="bt-label">End</span><span>{{ tooltipFormatDate(tooltipItem.end) }}</span></div>
+  <div class="bt-row"><span class="bt-label">Duration</span><span>{{ tooltipDuration(tooltipItem) }}</span></div>
+  <div class="bt-row">
+    <span class="bt-label">Status</span>
+    <span [style.color]="tooltipStatusColor(tooltipItem)" style="font-weight:700">{{ tooltipStatus(tooltipItem) }}</span>
+  </div>
+</div>
+
+<!-- ── Right-click create menu ───────────────────────────────────────────── -->
+<div *ngIf="emptyMenuVisible"
+     class="empty-ctx-overlay"
+     (click)="closeEmptyMenu()">
+</div>
+<div *ngIf="emptyMenuVisible"
+     class="empty-ctx-menu"
+     [style.left.px]="emptyMenuX"
+     [style.top.px]="emptyMenuY">
+  <div class="ctx-date-label" *ngIf="emptyMenuDate">
+    {{ emptyMenuDate | date:'EEE, MMM d yyyy' }}
+  </div>
+  <button class="ctx-item" (click)="addTaskAtDate()">＋ Add Task Here</button>
+  <button class="ctx-item" (click)="addTask(); closeEmptyMenu()">＋ Add Task (choose date)</button>
+  <button class="ctx-item ctx-cancel" (click)="closeEmptyMenu()">Cancel</button>
+</div>
+
+<!-- ── Drag date label ────────────────────────────────────────────────────── -->
+<div *ngIf="isDragging && dragDateLabel"
+     class="drag-date-label"
+     [style.left.px]="dragLabelX"
+     [style.top.px]="dragLabelY">
+  📅 {{ dragDateLabel }}
+</div>
+
+<div class="container-fluid" style="height: 100vh; width: 100vw;"
+     [style.--zoom-font]="barFontSize"
+     [style.--zoom-group-height]="ganttGroupHeight"
+     (contextmenu)="onGanttContextMenu($event)"
+     (mousemove)="onGanttMouseMove($event)">
+  <!-- ── Toolbar ── -->
+  <div class="row toolbar-row">
     <div class="col-md-4 col-12">
       <h6>Project Filter</h6>
-      <ng-select [items]="statusFilters" 
-                 bindLabel="label" 
-                 bindValue="value" 
+      <ng-select [items]="statusFilters"
+                 bindLabel="label"
+                 bindValue="value"
                  [multiple]="false"
-                 (change)="onFilterChangeStatus($event)"
+                 (change)="onFilterChangeStatus()"
                  searchPlaceholder="Select Status"
                  [(ngModel)]="statusFilter">
       </ng-select>
     </div>
     <div class="col-md-4 col-12">
       <h6>Foreman Filter</h6>
-      <ng-select [items]="foremanFilters" 
-                 bindLabel="label" 
-                 bindValue="value" 
+      <ng-select [items]="foremanFilters"
+                 bindLabel="label"
+                 bindValue="value"
                  [multiple]="false"
-                 (change)="onFilterChangeStatus($event)"
+                 (change)="onFilterChangeStatus()"
                  searchPlaceholder="Select Foreman"
                  [(ngModel)]="foremanFilter">
       </ng-select>
     </div>
-    <div class="col-md-4 col-12 d-flex">
-      <button (click)="expandAllGroups()" class="align-self-center mr-1">
+    <div class="col-md-4 col-12 d-flex align-items-end">
+      <button (click)="expandAllGroups()" class="toolbar-btn">
         {{ expanded ? 'Collapse' : 'Expand' }}
       </button>
-      <button (click)="addTask()" class="align-self-center">
-        {{ 'Add Task' }}
-      </button>
+      <button (click)="addTask()" class="toolbar-btn">Add Task</button>
+      <button (click)="generatePDF()" class="toolbar-btn">Download as PDF</button>
+
+      <!-- ── Gantt zoom controls ── -->
+      <div class="gantt-zoom-controls">
+        <span class="zoom-label">Timeline Zoom</span>
+        <button class="zoom-btn" (click)="zoomOut()" title="Zoom out">−</button>
+        <span class="zoom-value">{{ zoomCellWidth }}px</span>
+        <button class="zoom-btn" (click)="zoomIn()" title="Zoom in">+</button>
+        <button class="zoom-btn zoom-reset" (click)="zoomReset()" title="Reset zoom">↺</button>
+      </div>
     </div>
   </div>
 
-  <ngx-gantt
-    #gantt
-    [groups]="groups"
-    [items]="items"
-    [viewType]="viewType"
-    [draggable]="true"
-    [async]="true"
-    [childrenResolve]="childrenResolve"
-    [viewOptions]="viewOptions"
-    (contextmenu)="onGanttContextMenu($event)"
-    (barClick)="barClick($event)"
-    (dragEnded)="dragEnded($event)"
-  >
-    <!-- Add your Gantt chart configuration here -->
-    <ngx-gantt-table [draggable]="true">
-      <ngx-gantt-column name="Active Projects" width="180px">
-        <ng-template #cell let-item="item"> {{ item.title }} </ng-template>
-      </ngx-gantt-column>
-      <ngx-gantt-column name="Foremen" width="180px">
-        <ng-template #cell let-item="item">
-          {{ getManagerName(item.id) }} 
-        </ng-template>
-      </ngx-gantt-column>
-    </ngx-gantt-table>
+  <!-- ── Gantt Frame ── -->
+  <div class="gantt-frame mt-2" style="height: calc(100vh - 120px);">
 
-    <!-- group template -->
-    <ng-template #group let-group="group" let-items="items">
-      <span class="text-primary">{{ group.title }}</span>
-    </ng-template>
-    <ng-template #bar let-item="item">
-      <span [cdkMenuTriggerFor]="menu" style="color: #fff">&nbsp;&nbsp;{{ item.title }}</span>
-    </ng-template>
-  </ngx-gantt>
+    <div id="gantt-container" style="height: 100%; overflow: hidden;">
+      <div style="height: 100%; overflow: auto;">
+        <ngx-gantt
+          *ngIf="showGantt"
+          #gantt
+          [groups]="groups"
+          [items]="items"
+          [viewType]="viewType"
+          [draggable]="true"
+          [async]="true"
+          [childrenResolve]="childrenResolve"
+          [viewOptions]="viewOptions"
+          [styles]="ganttStyles"
+          (contextmenu)="onGanttContextMenu($event)"
+          (barClick)="barClick($event)"
+          (dragStarted)="onDragStarted($event)"
+          (dragEnded)="dragEnded($event)"
+        >
+          <ngx-gantt-table>
+            <ngx-gantt-column name="Active Projects" [width]="col1Width">
+              <ng-template #header>
+                <span class="col-header">Active Projects</span>
+              </ng-template>
+              <ng-template #cell let-item="item">
+                <span class="col-cell" [cdkMenuTriggerFor]="columnMenu" [cdkMenuTriggerData]="{ item: item }" style="cursor: pointer;">
+                  {{ item.title }}
+                </span>
+              </ng-template>
+            </ngx-gantt-column>
+            <ngx-gantt-column name="Foremen" [width]="col2Width">
+              <ng-template #header>
+                <span class="col-header">Foreman</span>
+              </ng-template>
+              <ng-template #cell let-item="item">
+                <span class="col-cell" [cdkMenuTriggerFor]="columnMenu" [cdkMenuTriggerData]="{ item: item }" style="cursor: pointer;">
+                  {{ getManagerName(item.id) }}
+                </span>
+              </ng-template>
+            </ngx-gantt-column>
+          </ngx-gantt-table>
+
+          <ng-template #group let-group="group">
+            <span class="group-title">{{ group.title }}</span>
+          </ng-template>
+
+          <ng-template #bar let-item="item">
+            <span
+              *ngIf="!item.isHoliday; else noMenu"
+              [cdkMenuTriggerFor]="menu"
+              (mouseenter)="showTooltip($event, item)"
+              (mousemove)="positionTooltip($event)"
+              (mouseleave)="hideTooltip()"
+              [ngStyle]="{
+                'font-size': barFontSize,
+                'font-family': '\'Inter\', sans-serif',
+                'font-weight': '700',
+                'color': '#000',
+                'text-shadow': '0 0 6px rgba(255,255,255,0.7)',
+                'display': 'flex',
+                'align-items': 'center',
+                'justify-content': 'center',
+                'width': '100%',
+                'height': '100%',
+                'overflow': 'hidden',
+                'white-space': 'nowrap',
+                'text-overflow': 'ellipsis'
+              }"
+              style="cursor: pointer;">
+              {{ item.title }}
+            </span>
+            <ng-template #noMenu>
+              <span
+                (mouseenter)="showTooltip($event, item)"
+                (mousemove)="positionTooltip($event)"
+                (mouseleave)="hideTooltip()"
+                [ngStyle]="{
+                'font-size': barFontSize,
+                'font-family': '\'Inter\', sans-serif',
+                'font-weight': '700',
+                'color': '#000',
+                'text-shadow': '0 0 6px rgba(255,255,255,0.7)',
+                'display': 'flex',
+                'align-items': 'center',
+                'justify-content': 'center',
+                'width': '100%',
+                'height': '100%',
+                'overflow': 'hidden',
+                'white-space': 'nowrap',
+                'text-overflow': 'ellipsis'
+              }">{{ item.title }}</span>
+            </ng-template>
+          </ng-template>
+
+        </ngx-gantt>
+      </div>
+    </div>
+  </div>
 </div>

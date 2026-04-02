@@ -1,58 +1,438 @@
-@use "@worktile/gantt/styles/index.scss";
+@use '@worktile/gantt/styles/variables.scss' with (
+  $gantt-color: #333,
+  $gantt-date-week-backdrop-bg: rgba(#b0b0b0, 0.35),
+);
+
+// ─── Global font + TV rendering ──────────────────────────────────────────────
+// Inter: open apertures, straight terminals, tall x-height = best legibility
+// at distance on large screens and conference-room TVs.
 
 body, html {
   margin: 0;
   padding: 0;
+  font-family: 'Inter', 'Roboto', sans-serif;
+  -webkit-font-smoothing:  antialiased;   // prevents blurry letterforms on LCD/TV
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  font-feature-settings: "kern" 1, "liga" 1;
+}
+
+// Force Inter on all gantt text so the library's default font doesn't leak through
+ngx-gantt, ngx-gantt * {
+  font-family: 'Inter', sans-serif !important;
 }
 
 .container {
-    height: 100%;
-    width: 100%;
+  height: 100%;
+  width: 100%;
 }
-.top-left-button {
-    margin: 10px;
-  }
 
-  .example-menu {
-    display: inline-flex;
-    flex-direction: column;
-    min-width: 180px;
-    max-width: 280px;
-    background-color: rgba(255, 255, 255);
-    padding: 6px 0;
-  }
-  
-  .example-menu-item,
-  .example-standalone-trigger {
-    background-color: transparent;
-    cursor: pointer;
-    border: none;
-  
-    user-select: none;
-    min-width: 64px;
-    line-height: 36px;
-    padding: 0 16px;
-  
-    display: flex;
-    align-items: center;
-    flex-direction: row;
-    flex: 1;
-  }
-  
-  .example-menu-item:hover {
-    background-color: rgb(208, 208, 208);
-  }
-  
-  .example-menu-item:active {
-    background-color: rgb(170, 170, 170);
-  }
-  
-  .example-standalone-item {
-    background-color: rgb(239, 239, 239);
-  }
-  .example-standalone-item:hover {
-    background-color: rgb(208, 208, 208);
-  }
-  .example-standalone-item[aria-expanded='true'] {
-    background-color: rgb(208, 208, 208);
-  }
+#gantt-container {
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  height: 100%;
+}
+
+ngx-gantt {
+  width: 100%;
+  height: 100%;
+}
+
+// ─── Toolbar ─────────────────────────────────────────────────────────────────
+
+.toolbar-row {
+  padding: 6px 8px 4px;
+}
+
+.toolbar-btn {
+  margin-right: 6px;
+  padding: 4px 10px;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+// ─── Gantt frame ─────────────────────────────────────────────────────────────
+
+.gantt-frame {
+  position: relative;
+  border: 2px solid #c8d6e8;
+  border-radius: 6px;
+  overflow: hidden;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.12);
+}
+
+// Zoom controls inline in the toolbar
+.gantt-zoom-controls {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: 16px;
+  background: #f0f4fb;
+  border: 1px solid #c8d6e8;
+  border-radius: 20px;
+  padding: 4px 12px;
+}
+
+.zoom-btn {
+  background: none;
+  border: 1px solid #999;
+  border-radius: 50%;
+  width: 28px;
+  height: 28px;
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  color: #333;
+
+  &:hover  { background: #e8f0fe; border-color: #1565c0; color: #1565c0; }
+  &:active { background: #c8d6e8; }
+}
+
+.zoom-reset {
+  font-size: 15px;
+}
+
+.zoom-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #1565c0;
+  white-space: nowrap;
+}
+
+.zoom-value {
+  font-size: 12px;
+  color: #555;
+  white-space: nowrap;
+  min-width: 40px;
+  text-align: center;
+}
+
+// ─── Context / column menu ───────────────────────────────────────────────────
+
+.example-menu {
+  display: inline-flex;
+  flex-direction: column;
+  min-width: 180px;
+  max-width: 280px;
+  background-color: #fff;
+  padding: 6px 0;
+}
+
+.example-menu-item {
+  background-color: transparent;
+  cursor: pointer;
+  border: none;
+  user-select: none;
+  min-width: 64px;
+  line-height: 36px;
+  padding: 0 16px;
+  display: flex;
+  align-items: center;
+}
+
+.example-menu-item:hover  { background-color: rgb(208, 208, 208); }
+.example-menu-item:active { background-color: rgb(170, 170, 170); }
+
+// ─── Table columns ───────────────────────────────────────────────────────────
+
+.col-header {
+  font-family: 'Inter', sans-serif;
+  font-size: var(--zoom-font, 28px);
+  font-weight: 700;
+  color: #111;
+  letter-spacing: 0.4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: block;
+  max-width: 100%;
+}
+
+.col-cell {
+  font-family: 'Inter', sans-serif;
+  font-size: var(--zoom-font, 28px);
+  font-weight: 700;
+  color: #1a1a1a;
+  display: flex;
+  align-items: center;
+  height: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  letter-spacing: 0.3px;
+  max-width: 100%;
+}
+
+// ─── Group title row ─────────────────────────────────────────────────────────
+
+.group-title {
+  font-family: 'Inter', sans-serif;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  font-size: calc(var(--zoom-font, 28px) * 1.09); // ~10% larger than task text
+  font-weight: 800;
+  color: #1565c0;
+  letter-spacing: 0.5px;
+  text-align: center;
+}
+
+// ─── Calendar header — expanded from 44px → 60px for 50%-larger date fonts ───
+// The library hardcodes headerHeight=44 as a JS constant and the container has
+// overflow:hidden at 44px — both must be overridden together.
+
+.gantt-table-header {
+  height:      60px !important;
+  line-height: 60px !important;
+}
+
+.gantt-side-header {
+  height: 60px !important;
+}
+
+// Critical: height expanded to 60px; overflow MUST stay hidden (not visible)
+// so that programmatic scrollLeft works and the header tracks the bars.
+.gantt-calendar-header {
+  height:   60px !important;
+  overflow: hidden !important;
+}
+
+.gantt-calendar-header svg {
+  height:   60px !important;
+  overflow: visible !important;  // SVG itself can overflow within the clipped div
+}
+
+// In virtual-scroll mode the library sets gantt-main-container { top: 0 }
+// because gantt-virtual-scroll-viewport already carries the header offset.
+// Only override the viewport top — do NOT add top:60px to gantt-main-container.
+
+.gantt-main-container {
+  height: 100% !important;
+  top:    0 !important;
+}
+
+.gantt-virtual-scroll-viewport {
+  top: 60px !important;
+}
+
+// ─── Calendar header text — Inter font, sizes set via point.style in custom-day-view.ts ──
+
+.gantt-calendar-header svg text.primary-text {
+  font-family: 'Inter', sans-serif !important;
+  font-weight: bold !important;
+}
+
+.gantt-calendar-header svg text.secondary-text {
+  font-family: 'Inter', sans-serif !important;
+  font-weight: bold !important;
+}
+
+// Hide the library's horizontal divider line — it was drawn at y=44 (inside our
+// expanded 60px header), cutting through the middle of the date text.
+.gantt-calendar-header svg line.header-line {
+  display: none !important;
+}
+
+// ─── Group / project name rows (true group headers only) ─────────────────────
+// .gantt-table-item-first-level-group is a TASK row styled like a group — it
+// must NOT get the group height override or left/right rows go out of sync.
+
+.gantt-table-group,
+.gantt-group {
+  background: rgba(61, 61, 61, 0.5) !important;
+  height: var(--zoom-group-height, 50px) !important;
+  min-height: 50px !important;
+}
+
+// Keep the dark background on first-level-group task rows, but leave height alone
+.gantt-table-item.gantt-table-item-first-level-group {
+  background: rgba(61, 61, 61, 0.5) !important;
+}
+
+// ─── Task rows — row shading matches weekend column shading (rgba(0,0,0,0.09)) ─
+// Same value used in addWeekendShading() SVG rects — keep both in sync.
+
+.gantt-table-item,
+.gantt-item {
+  background: rgba(0, 0, 0, 0.14) !important;
+  border-bottom: 1.5px dashed #888 !important;
+  box-sizing: border-box !important;
+}
+
+.gantt-table-item:hover,
+.gantt-item:hover {
+  background: rgba(0, 0, 0, 0.22) !important;
+}
+
+// Group header rows get the same dashed bottom border
+.gantt-table-group,
+.gantt-group {
+  border-bottom: 1.5px dashed #555 !important;
+  box-sizing: border-box !important;
+}
+
+// ─── Hover tooltip ───────────────────────────────────────────────────────────
+
+.bar-tooltip {
+  position:   fixed;
+  z-index:    9999;
+  pointer-events: none;
+  background: rgba(15, 30, 55, 0.96);
+  color:      #f0f4fb;
+  border:     1px solid #4fc3f7;
+  border-radius: 8px;
+  padding:    10px 14px;
+  min-width:  210px;
+  max-width:  260px;
+  box-shadow: 0 6px 24px rgba(0,0,0,0.4);
+  font-family: 'Inter', sans-serif;
+  font-size:  12px;
+  line-height: 1.5;
+}
+
+.bt-title {
+  font-size:   13px;
+  font-weight: 700;
+  color:       #ffffff;
+  margin-bottom: 8px;
+  border-bottom: 1px solid rgba(79,195,247,0.3);
+  padding-bottom: 6px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.bt-row {
+  display:         flex;
+  justify-content: space-between;
+  gap:             8px;
+  margin-bottom:   3px;
+}
+
+.bt-label {
+  color:       #90caf9;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+// ─── Right-click create menu ──────────────────────────────────────────────────
+
+.empty-ctx-overlay {
+  position: fixed;
+  inset:    0;
+  z-index:  8000;
+}
+
+.empty-ctx-menu {
+  position:      fixed;
+  z-index:       8001;
+  background:    #fff;
+  border:        1px solid #c8d6e8;
+  border-radius: 8px;
+  box-shadow:    0 8px 28px rgba(0,0,0,0.18);
+  min-width:     190px;
+  overflow:      hidden;
+  font-family:   'Inter', sans-serif;
+}
+
+.ctx-date-label {
+  background:  #f0f4fb;
+  color:       #1565c0;
+  font-size:   11px;
+  font-weight: 700;
+  padding:     6px 14px;
+  border-bottom: 1px solid #c8d6e8;
+  letter-spacing: 0.3px;
+}
+
+.ctx-item {
+  display:    block;
+  width:      100%;
+  padding:    9px 14px;
+  background: transparent;
+  border:     none;
+  text-align: left;
+  font-size:  13px;
+  font-family: 'Inter', sans-serif;
+  color:      #222;
+  cursor:     pointer;
+
+  &:hover { background: #f0f4fb; color: #1565c0; }
+}
+
+.ctx-cancel {
+  border-top: 1px solid #e8e8e8;
+  color:      #999;
+  font-size:  12px;
+
+  &:hover { background: #fafafa; color: #555; }
+}
+
+// ─── Drag date label ──────────────────────────────────────────────────────────
+
+.drag-date-label {
+  position:      fixed;
+  z-index:       9999;
+  pointer-events: none;
+  background:    #1565c0;
+  color:         #fff;
+  font-family:   'Inter', sans-serif;
+  font-size:     12px;
+  font-weight:   700;
+  padding:       5px 12px;
+  border-radius: 20px;
+  box-shadow:    0 3px 12px rgba(0,0,0,0.25);
+  white-space:   nowrap;
+  letter-spacing: 0.3px;
+}
+
+// ─── Today needle — bold red vertical line + date badge ──────────────────────
+
+// The full-height vertical line (positioned by the library via JS)
+.today-line {
+  position:   absolute !important;
+  width:      3px !important;
+  background: #e53935 !important;
+  opacity:    0.85;
+  z-index:    50 !important;
+  pointer-events: none;
+  box-shadow: 0 0 6px rgba(229, 57, 53, 0.55);
+}
+
+// The date badge that sits in the calendar header above the needle
+.today-rect {
+  position:        absolute !important;
+  background:      #e53935 !important;
+  color:           #ffffff !important;
+  font-family:     'Inter', sans-serif !important;
+  font-size:       11px !important;
+  font-weight:     700 !important;
+  border-radius:   4px !important;
+  text-align:      center !important;
+  line-height:     24px !important;
+  width:           35px !important;
+  height:          24px !important;
+  z-index:         51 !important;
+  pointer-events:  none;
+  box-shadow:      0 2px 6px rgba(229, 57, 53, 0.45);
+}
+
+// ─── Grid lines — more visible for TV / conference room display ───────────────
+
+.gantt-calendar-grid .secondary-line {
+  stroke:           #888 !important;  // was #cacaca — much darker
+  stroke-width:     1.5px !important; // was default ~1px
+  stroke-dasharray: 4px 4px !important;
+}
+
+.gantt-calendar-grid .primary-line {
+  stroke:       #555 !important;
+  stroke-width: 2px !important;
+}
