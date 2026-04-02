@@ -12,7 +12,6 @@ import { DatamapComponent } from './datamap/datamap.component';
 import { DynamicChartComponent } from './dynamic-chart/dynamic-chart.component';
 import { NgChartsModule } from 'ng2-charts';
 import { ToastrModule } from 'ngx-toastr';
-import 'chart.js/dist/Chart.js';
 import { DayPilotModule } from '@daypilot/daypilot-lite-angular';
 import { DashboardService } from './dashboard.service';
 import { GANTT_GLOBAL_CONFIG, NgxGanttModule } from '@worktile/gantt';

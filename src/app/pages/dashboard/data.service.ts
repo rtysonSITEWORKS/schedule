@@ -1,5 +1,5 @@
 import {Injectable} from "@angular/core";
-import {Observable} from "rxjs";
+import {Observable, of} from "rxjs";
 import {HttpClient} from "@angular/common/http";
 import { random } from "./helper";
 import { addDays, GanttGroup, GanttItem, getUnixTime } from "@worktile/gantt";
@@ -247,6 +247,20 @@ export class DataService {
   }
 
   
+  getForemans(): Observable<any[]> {
+    const URL = `${this.route}getForemans`;
+    return this.http.get<any[]>(URL);
+  }
+
+  getTaskList(): Observable<any[]> {
+    return of(this.types);
+  }
+
+  convertToDeleted(projectId: number): Observable<null> {
+    const URL = `${this.route}convert_deleted/`;
+    return this.http.put<null>(URL + projectId, {});
+  }
+
   deleteRow(row: any){
     this.activeProjects = this.activeProjects.filter(item => item.name !== row.name);
   }
