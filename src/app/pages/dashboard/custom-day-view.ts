@@ -55,7 +55,7 @@ export class GanttViewCustom extends GanttView {
     getPrimaryDatePoints(): GanttDatePoint[] {
         const days      = eachDayOfInterval({ start: this.start.value, end: this.end.value });
         const points: GanttDatePoint[] = [];
-        const primaryPx = Math.min(Math.round(this.getCellWidth() * 0.27), 30);
+        const primaryPx = Math.min(Math.round(this.getCellWidth() * 0.50), 36);
 
         // One label per 7-day week, labelled with the month of the week's midpoint.
         // This ensures every visible segment always shows the current month name.
