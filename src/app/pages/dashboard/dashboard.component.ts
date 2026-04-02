@@ -463,8 +463,10 @@ export class DashboardComponent {
     const foundItem = this.items.find(item => item.id === target.id);
     if (!foundItem) return;
 
+    this.items         = this.items.filter(item => item.id !== foundItem.id);
+    this.originalItems = this.originalItems.filter(item => item.id !== foundItem.id);
+
     this.ds.convertToDeleted(parseInt(foundItem.id)).subscribe({
-      next:  () => this.loadChart(),
       error: err => console.error('Error deleting task:', err)
     });
   }
