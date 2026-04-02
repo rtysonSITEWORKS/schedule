@@ -154,6 +154,7 @@
             <span
               *ngIf="!item.isHoliday; else noMenu"
               [cdkMenuTriggerFor]="menu"
+              (click)="selectedItem = item"
               (mouseenter)="showTooltip($event, item)"
               (mousemove)="positionTooltip($event)"
               (mouseleave)="hideTooltip()"
