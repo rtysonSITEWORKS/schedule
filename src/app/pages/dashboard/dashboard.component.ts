@@ -366,7 +366,9 @@ export class DashboardComponent {
   }
 
   activeButtonClick(menuItem: CustomGanttItem): void {
-    const foundItem = this.items.find(item => item.id === menuItem.id);
+    const target = menuItem ?? this.selectedItem;
+    if (!target) return;
+    const foundItem = this.items.find(item => item.id === target.id);
     if (!foundItem) return;
 
     if (foundItem.actionText) {
@@ -382,7 +384,9 @@ export class DashboardComponent {
   }
 
   actionNeededButtonClick(menuItem: CustomGanttItem): void {
-    const foundItem = this.items.find(item => item.id === menuItem.id);
+    const target = menuItem ?? this.selectedItem;
+    if (!target) return;
+    const foundItem = this.items.find(item => item.id === target.id);
     if (!foundItem) return;
 
     const dialogRef = this.dialog.open(ActionNeededComponent, { width: '1000px', height: '300px' });
@@ -401,7 +405,9 @@ export class DashboardComponent {
   }
 
   editButtonClick(menuItem: CustomGanttItem): void {
-    const foundItem = this.items.find(item => item.id === menuItem.id);
+    const target = menuItem ?? this.selectedItem;
+    if (!target) return;
+    const foundItem = this.items.find(item => item.id === target.id);
     if (!foundItem) return;
 
     const dialogRef = this.dialog.open(EditTaskComponent, {
@@ -413,7 +419,9 @@ export class DashboardComponent {
   }
 
   onHoldButtonClick(menuItem: CustomGanttItem): void {
-    const foundItem = this.items.find(item => item.id === menuItem.id);
+    const target = menuItem ?? this.selectedItem;
+    if (!target) return;
+    const foundItem = this.items.find(item => item.id === target.id);
     if (!foundItem) return;
 
     if (foundItem.actionText) {
@@ -429,9 +437,11 @@ export class DashboardComponent {
   }
 
   completedButtonClick(menuItem: CustomGanttItem): void {
+    const target = menuItem ?? this.selectedItem;
+    if (!target) return;
     if (!confirm('Are you sure you want to complete this project?')) return;
 
-    const foundItem = this.items.find(item => item.id === menuItem.id);
+    const foundItem = this.items.find(item => item.id === target.id);
     if (!foundItem) return;
 
     const { group_id } = foundItem;
@@ -446,9 +456,11 @@ export class DashboardComponent {
   }
 
   deletedButtonClick(menuItem: CustomGanttItem): void {
+    const target = menuItem ?? this.selectedItem;
+    if (!target) return;
     if (!confirm('Are you sure you want to delete this task?')) return;
 
-    const foundItem = this.items.find(item => item.id === menuItem.id);
+    const foundItem = this.items.find(item => item.id === target.id);
     if (!foundItem) return;
 
     this.ds.convertToDeleted(parseInt(foundItem.id)).subscribe({
