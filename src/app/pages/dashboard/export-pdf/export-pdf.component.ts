@@ -34,7 +34,7 @@ export class ExportPdfComponent implements OnInit {
 
   ngOnInit(): void {
     // Pre-load the logo so it's ready when the user clicks Export
-    fetch('assets/img/logo/siteworks.png')
+    fetch('assets/img/logo/siteworks-full.png')
       .then(r => r.blob())
       .then(blob => {
         const reader    = new FileReader();
@@ -76,15 +76,15 @@ export class ExportPdfComponent implements OnInit {
   // ── Branded cover header block (first item in content) ────────────────────
   private buildCoverHeader(today: string): any {
     const logoCell: any = this.logoDataUrl
-      ? { image: this.logoDataUrl, width: 130, alignment: 'center', margin: [0, 6, 0, 6] }
+      ? { image: this.logoDataUrl, width: 180, alignment: 'center', margin: [10, 10, 10, 10] }
       : { text: 'SiteWorks', fontSize: 20, bold: true, color: '#ffffff', alignment: 'center', margin: [0, 14, 0, 14] };
 
     return {
       table: {
-        widths: [160, '*', 130],
+        widths: [200, '*', 130],
         body: [[
-          // ── Left: logo ─────────────────────────────────────────────────
-          { ...logoCell, fillColor: '#0d3b6e', border: [false, false, false, false] },
+          // ── Left: logo (white bg so full wordmark renders cleanly) ──────
+          { ...logoCell, fillColor: '#ffffff', border: [false, false, false, false] },
 
           // ── Centre: report title + date ────────────────────────────────
           {
@@ -142,14 +142,15 @@ export class ExportPdfComponent implements OnInit {
   // ── Repeating page header (page 2+) ──────────────────────────────────────
   private buildPageHeader(today: string, currentPage: number, pageCount: number): any {
     const logoCell: any = this.logoDataUrl
-      ? { image: this.logoDataUrl, width: 60, alignment: 'center', margin: [0, 3, 0, 3] }
+      ? { image: this.logoDataUrl, width: 110, alignment: 'center', margin: [6, 4, 6, 4] }
       : { text: 'SiteWorks', fontSize: 10, bold: true, color: '#ffffff', alignment: 'center', margin: [0, 7, 0, 7] };
 
     return {
       table: {
-        widths: [80, '*', 'auto'],
+        widths: [130, '*', 'auto'],
         body: [[
-          { ...logoCell, fillColor: '#0d3b6e', border: [false, false, false, false] },
+          // White background so wordmark PNG renders cleanly
+          { ...logoCell, fillColor: '#ffffff', border: [false, false, false, false] },
           {
             text:      'PROJECT SCHEDULE REPORT',
             fontSize:  9,
@@ -157,21 +158,21 @@ export class ExportPdfComponent implements OnInit {
             color:     '#ffffff',
             fillColor: '#1565c0',
             border:    [false, false, false, false],
-            margin:    [10, 9, 0, 9]
+            margin:    [10, 7, 0, 7]
           },
           {
             stack: [
-              { text: today,                            fontSize: 7, color: '#b3d9f7', alignment: 'right' },
+              { text: today,                                 fontSize: 7, color: '#b3d9f7', alignment: 'right' },
               { text: `Page ${currentPage} of ${pageCount}`, fontSize: 7, color: '#ffffff', bold: true, alignment: 'right', margin: [0, 2, 0, 0] }
             ],
             fillColor: '#0d47a1',
             border:    [false, false, false, false],
-            margin:    [0, 7, 10, 7]
+            margin:    [0, 5, 10, 5]
           }
         ]]
       },
       layout: { defaultBorder: false },
-      margin: [30, 8, 30, 0]
+      margin: [30, 6, 30, 0]
     };
   }
 
@@ -249,7 +250,7 @@ export class ExportPdfComponent implements OnInit {
     const docDef: any = {
       pageOrientation: 'landscape',
       pageSize:        'LETTER',
-      pageMargins:     [30, 45, 30, 40],
+      pageMargins:     [30, 70, 30, 40],
 
       header: (currentPage: number, pageCount: number) => {
         // Page 1: no repeated header — the cover block in content serves as the header
