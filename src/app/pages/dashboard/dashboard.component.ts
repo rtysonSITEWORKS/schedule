@@ -52,8 +52,8 @@ export class DashboardComponent {
   showGantt = false; // stays false until data loads + column widths are calculated
 
   // Column widths — fixed at these values across all zoom levels
-  readonly col1Width = '400px';
-  readonly col2Width = '300px';
+  readonly col1Width = '300px';
+  readonly col2Width = '200px';
 
   // Gantt zoom — calendar, bars, column text, and row heights all scale together
   readonly ZOOM_DEFAULT = 35;
@@ -101,7 +101,7 @@ export class DashboardComponent {
 
   /** All size tokens derived from zoom, calibrated so 60px cell = clean round numbers:
    *  font=21px  |  task-row=50px  |  bar=42px  |  group-row=35px */
-  get barFontSize(): string  { return Math.round(this.zoomCellWidth * 0.35) + 'px'; }
+  get barFontSize(): string  { return Math.round(this.zoomCellWidth * 0.60) + 'px'; }
   get ganttStyles(): { lineHeight: number; barHeight: number } {
     return {
       lineHeight: Math.round(this.zoomCellWidth * 0.833),  // 60px → 50px
