@@ -365,12 +365,12 @@ export class DashboardComponent {
     this.selectedItem = event.item as CustomGanttItem;
   }
 
-  activeButtonClick(): void {
-    const foundItem = this.items.find(item => item.id === this.selectedItem?.id);
+  activeButtonClick(menuItem: CustomGanttItem): void {
+    const foundItem = this.items.find(item => item.id === menuItem.id);
     if (!foundItem) return;
 
     if (foundItem.actionText) {
-      foundItem.title    = foundItem.title.replace(foundItem.actionText, '');
+      foundItem.title      = foundItem.title.replace(foundItem.actionText, '');
       foundItem.actionText = null;
     }
     foundItem.color = null;
@@ -381,8 +381,8 @@ export class DashboardComponent {
     });
   }
 
-  actionNeededButtonClick(): void {
-    const foundItem = this.items.find(item => item.id === this.selectedItem?.id);
+  actionNeededButtonClick(menuItem: CustomGanttItem): void {
+    const foundItem = this.items.find(item => item.id === menuItem.id);
     if (!foundItem) return;
 
     const dialogRef = this.dialog.open(ActionNeededComponent, { width: '1000px', height: '300px' });
@@ -400,8 +400,8 @@ export class DashboardComponent {
     });
   }
 
-  editButtonClick(): void {
-    const foundItem = this.items.find(item => item.id === this.selectedItem?.id);
+  editButtonClick(menuItem: CustomGanttItem): void {
+    const foundItem = this.items.find(item => item.id === menuItem.id);
     if (!foundItem) return;
 
     const dialogRef = this.dialog.open(EditTaskComponent, {
@@ -412,12 +412,12 @@ export class DashboardComponent {
     dialogRef.afterClosed().subscribe(() => this.loadChart());
   }
 
-  onHoldButtonClick(): void {
-    const foundItem = this.items.find(item => item.id === this.selectedItem?.id);
+  onHoldButtonClick(menuItem: CustomGanttItem): void {
+    const foundItem = this.items.find(item => item.id === menuItem.id);
     if (!foundItem) return;
 
     if (foundItem.actionText) {
-      foundItem.title    = foundItem.title.replace(foundItem.actionText, '');
+      foundItem.title      = foundItem.title.replace(foundItem.actionText, '');
       foundItem.actionText = null;
     }
     foundItem.color = '#FF0000';
@@ -428,16 +428,16 @@ export class DashboardComponent {
     });
   }
 
-  completedButtonClick(): void {
+  completedButtonClick(menuItem: CustomGanttItem): void {
     if (!confirm('Are you sure you want to complete this project?')) return;
 
-    const foundItem = this.items.find(item => item.id === this.selectedItem?.id);
+    const foundItem = this.items.find(item => item.id === menuItem.id);
     if (!foundItem) return;
 
     const { group_id } = foundItem;
-    this.items         = this.items.filter(item => item.group_id !== group_id);
-    this.originalItems = this.originalItems.filter(item => item.group_id !== group_id);
-    this.groups        = this.groups.filter(group => group.id !== group_id);
+    this.items          = this.items.filter(item => item.group_id !== group_id);
+    this.originalItems  = this.originalItems.filter(item => item.group_id !== group_id);
+    this.groups         = this.groups.filter(group => group.id !== group_id);
     this.originalGroups = this.originalGroups.filter(group => group.id !== group_id);
 
     this.ds.convertToComplete(parseInt(group_id)).subscribe({
@@ -445,10 +445,10 @@ export class DashboardComponent {
     });
   }
 
-  deletedButtonClick(): void {
+  deletedButtonClick(menuItem: CustomGanttItem): void {
     if (!confirm('Are you sure you want to delete this task?')) return;
 
-    const foundItem = this.items.find(item => item.id === this.selectedItem?.id);
+    const foundItem = this.items.find(item => item.id === menuItem.id);
     if (!foundItem) return;
 
     this.ds.convertToDeleted(parseInt(foundItem.id)).subscribe({

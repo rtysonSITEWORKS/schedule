@@ -1,11 +1,11 @@
-<ng-template #menu>
+<ng-template #menu let-menuItem="item">
   <div class="example-menu" cdkMenu>
-    <button class="example-menu-item" cdkMenuItem (click)="activeButtonClick()">Active</button>
-    <button class="example-menu-item" cdkMenuItem (click)="actionNeededButtonClick()">Action Needed</button>
-    <button class="example-menu-item" cdkMenuItem (click)="onHoldButtonClick()">On Hold</button>
-    <button class="example-menu-item" cdkMenuItem (click)="completedButtonClick()">Completed</button>
-    <button class="example-menu-item" cdkMenuItem (click)="deletedButtonClick()">Delete</button>
-    <button class="example-menu-item" cdkMenuItem (click)="editButtonClick()">Edit Task</button>
+    <button class="example-menu-item" cdkMenuItem (click)="activeButtonClick(menuItem)">Active</button>
+    <button class="example-menu-item" cdkMenuItem (click)="actionNeededButtonClick(menuItem)">Action Needed</button>
+    <button class="example-menu-item" cdkMenuItem (click)="onHoldButtonClick(menuItem)">On Hold</button>
+    <button class="example-menu-item" cdkMenuItem (click)="completedButtonClick(menuItem)">Completed</button>
+    <button class="example-menu-item" cdkMenuItem (click)="deletedButtonClick(menuItem)">Delete</button>
+    <button class="example-menu-item" cdkMenuItem (click)="editButtonClick(menuItem)">Edit Task</button>
   </div>
 </ng-template>
 <ng-template #columnMenu let-item="item">
@@ -154,7 +154,7 @@
             <span
               *ngIf="!item.isHoliday; else noMenu"
               [cdkMenuTriggerFor]="menu"
-              (click)="selectedItem = item"
+              [cdkMenuTriggerData]="{ item: item }"
               (mouseenter)="showTooltip($event, item)"
               (mousemove)="positionTooltip($event)"
               (mouseleave)="hideTooltip()"
