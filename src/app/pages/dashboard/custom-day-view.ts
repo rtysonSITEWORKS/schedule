@@ -88,7 +88,7 @@ export class GanttViewCustom extends GanttView {
         const days        = eachDayOfInterval({ start: this.start.value, end: this.end.value });
         const points: GanttDatePoint[] = [];
         // 50% larger than original — cap at 26px to fit at y=47 in 60px SVG
-        const dayFontSize = `${Math.min(Math.round(this.getCellWidth() * 0.28), 26)}px`;
+        const dayFontSize = `${Math.min(Math.round(this.getCellWidth() * 0.34), 26)}px`;
 
         for (let i = 0; i < days.length; i++) {
             const start     = new GanttDate(days[i]);
