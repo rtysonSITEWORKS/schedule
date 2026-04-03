@@ -101,7 +101,7 @@ export class DashboardComponent {
 
   /** All size tokens derived from zoom, calibrated so 60px cell = clean round numbers:
    *  font=21px  |  task-row=50px  |  bar=42px  |  group-row=35px */
-  get barFontSize(): string  { return Math.round(this.zoomCellWidth * 0.44) + 'px'; }
+  get barFontSize(): string  { return Math.round(this.zoomCellWidth * 0.49) + 'px'; }
 
   /** Hide bar label when the bar is narrower than ~2 days at current zoom */
   barIsNarrow(item: CustomGanttItem): boolean {
