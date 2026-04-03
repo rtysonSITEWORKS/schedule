@@ -112,7 +112,7 @@ export class DashboardComponent {
   get ganttStyles(): { lineHeight: number; barHeight: number } {
     return {
       lineHeight: Math.round(this.zoomCellWidth * 0.833),  // 60px → 50px
-      barHeight:  Math.round(this.zoomCellWidth * 0.70)    // 60px → 42px (4px gap each side)
+      barHeight:  Math.round(this.zoomCellWidth * 0.76)    // snug fit for font + descenders
     };
   }
   /** Group header rows match task row height — calibrated so 60px zoom = 50px */
