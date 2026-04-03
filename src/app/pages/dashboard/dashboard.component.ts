@@ -102,6 +102,13 @@ export class DashboardComponent {
   /** All size tokens derived from zoom, calibrated so 60px cell = clean round numbers:
    *  font=21px  |  task-row=50px  |  bar=42px  |  group-row=35px */
   get barFontSize(): string  { return Math.round(this.zoomCellWidth * 0.44) + 'px'; }
+
+  /** Hide bar label when the bar is narrower than ~2 days at current zoom */
+  barIsNarrow(item: CustomGanttItem): boolean {
+    const ms   = this.ganttValToMs(item.end) - this.ganttValToMs(item.start);
+    const days = ms / 86400000;
+    return days * this.zoomCellWidth < 90;
+  }
   get ganttStyles(): { lineHeight: number; barHeight: number } {
     return {
       lineHeight: Math.round(this.zoomCellWidth * 0.833),  // 60px → 50px
