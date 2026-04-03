@@ -173,7 +173,7 @@
                 'overflow': 'hidden'
               }"
               style="cursor: pointer;">
-              <span *ngIf="!barIsNarrow(item)" style="overflow:hidden;white-space:nowrap;text-overflow:ellipsis;max-width:100%;">{{ item.title }}</span>
+              <span *ngIf="!barIsNarrow(item)" style="display:block;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;max-width:100%;text-align:center;">{{ item.title }}</span>
             </span>
             <ng-template #noMenu>
               <span
@@ -192,7 +192,7 @@
                 'width': '100%',
                 'height': '100%',
                 'overflow': 'hidden'
-              }"><span *ngIf="!barIsNarrow(item)" style="overflow:hidden;white-space:nowrap;text-overflow:ellipsis;max-width:100%;">{{ item.title }}</span></span>
+              }"><span *ngIf="!barIsNarrow(item)" style="display:block;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;max-width:100%;text-align:center;">{{ item.title }}</span></span>
             </ng-template>
           </ng-template>
 
