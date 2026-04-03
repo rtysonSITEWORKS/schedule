@@ -155,6 +155,7 @@
               *ngIf="!item.isHoliday; else noMenu"
               [cdkMenuTriggerFor]="menu"
               [cdkMenuTriggerData]="{ item: item }"
+              (mousedown)="selectedItem = item"
               (mouseenter)="showTooltip($event, item)"
               (mousemove)="positionTooltip($event)"
               (mouseleave)="hideTooltip()"
