@@ -367,23 +367,23 @@ ngx-gantt {
   background: rgba(15, 30, 55, 0.96);
   color:      #f0f4fb;
   border:     1.5px solid #4fc3f7;
-  border-radius: 12px;
-  padding:    15px 21px;
-  min-width:  315px;
-  max-width:  390px;
+  border-radius: 15px;
+  padding:    19px 26px;
+  min-width:  394px;
+  max-width:  488px;
   box-shadow: 0 9px 36px rgba(0,0,0,0.4);
   font-family: 'Inter', sans-serif;
-  font-size:  18px;
+  font-size:  23px;
   line-height: 1.5;
 }
 
 .bt-title {
-  font-size:   20px;
+  font-size:   25px;
   font-weight: 700;
   color:       #ffffff;
-  margin-bottom: 12px;
+  margin-bottom: 15px;
   border-bottom: 1px solid rgba(79,195,247,0.3);
-  padding-bottom: 9px;
+  padding-bottom: 11px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -392,7 +392,7 @@ ngx-gantt {
 .bt-row {
   display:         flex;
   justify-content: space-between;
-  gap:             12px;
+  gap:             15px;
   margin-bottom:   5px;
 }
 

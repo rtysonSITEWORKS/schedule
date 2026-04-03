@@ -244,12 +244,12 @@ export class DashboardComponent {
   }
 
   positionTooltip(event: MouseEvent): void {
-    const pad = 18;
-    const tw  = 345;
+    const pad = 22;
+    const tw  = 488;
     this.tooltipX = event.clientX + pad + tw > window.innerWidth
       ? event.clientX - tw - pad
       : event.clientX + pad;
-    this.tooltipY = Math.min(event.clientY - 10, window.innerHeight - 240);
+    this.tooltipY = Math.min(event.clientY - 10, window.innerHeight - 300);
   }
 
   hideTooltip(): void { this.tooltipVisible = false; }
