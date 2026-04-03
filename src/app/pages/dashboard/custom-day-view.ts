@@ -59,10 +59,10 @@ export class GanttViewCustom extends GanttView {
 
         // One label per 7-day week, labelled with the month of the week's midpoint.
         // This ensures every visible segment always shows the current month name.
-        for (let i = 0; i < days.length; i += 14) {
+        for (let i = 0; i < days.length; i += 12) {
             const weekStart     = new GanttDate(days[i]);
-            const weekCount     = Math.min(14, days.length - i);
-            const midpointIndex = Math.min(i + 7, days.length - 1);
+            const weekCount     = Math.min(12, days.length - i);
+            const midpointIndex = Math.min(i + 6, days.length - 1);
             const midday        = new GanttDate(days[midpointIndex]);
             const xCenter       = i * this.getCellWidth() + (weekCount * this.getCellWidth()) / 2;
 
