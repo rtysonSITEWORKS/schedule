@@ -1,5 +1,6 @@
 import {Injectable} from "@angular/core";
 import {Observable, of} from "rxjs";
+import { shareReplay } from "rxjs/operators";
 import {HttpClient} from "@angular/common/http";
 import { random } from "./helper";
 import { addDays, GanttGroup, GanttItem, getUnixTime } from "@worktile/gantt";
@@ -15,6 +16,8 @@ export class DataService {
     gray: "#808080",
     blue: "#2e78d6",
   };
+  private dictCache$: Observable<any>       | null = null;
+  private foremansCache$: Observable<any[]> | null = null;
   private group_id: number = 0;
   activeProjects: any[] = [];
   currentProjects: any[] = [];
@@ -123,8 +126,10 @@ export class DataService {
     return this.http.get<any>(URL);
   }
   getDict(): Observable<any> {
-    const URL = `${this.route}getDict`;
-    return this.http.get<any>(URL);
+    if (!this.dictCache$) {
+      this.dictCache$ = this.http.get<any>(`${this.route}getDict`).pipe(shareReplay(1));
+    }
+    return this.dictCache$;
   }
   addProject(project:any): void{
     this.activeProjects.push(project);
@@ -248,8 +253,10 @@ export class DataService {
 
   
   getForemans(): Observable<any[]> {
-    const URL = `${this.apiBaseUrl}foremen`;
-    return this.http.get<any[]>(URL);
+    if (!this.foremansCache$) {
+      this.foremansCache$ = this.http.get<any[]>(`${this.apiBaseUrl}foremen`).pipe(shareReplay(1));
+    }
+    return this.foremansCache$;
   }
 
   getTaskList(): Observable<any[]> {
