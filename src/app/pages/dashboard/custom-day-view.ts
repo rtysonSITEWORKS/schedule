@@ -57,15 +57,10 @@ export class GanttViewCustom extends GanttView {
         const points: GanttDatePoint[] = [];
         const primaryPx = Math.min(Math.round(this.getCellWidth() * 0.50), 36);
 
-        for (let i = 0; i < days.length; i += 10) {
-            const segCount      = Math.min(10, days.length - i);
-            const midpointIndex = Math.min(i + 5, days.length - 1);
-            const xCenter       = i * this.getCellWidth() + (segCount * this.getCellWidth()) / 2;
-            const midday        = new GanttDate(days[midpointIndex]);
-
+        const makePoint = (dayIndex: number, xCenter: number) => {
             const point = new GanttDatePoint(
-                new GanttDate(days[i]),
-                midday.format('MMMM yyyy'),
+                new GanttDate(days[dayIndex]),
+                new GanttDate(days[dayIndex]).format('MMMM yyyy'),
                 xCenter,
                 PRIMARY_Y,
                 { isWeekend: false, isToday: false }
@@ -76,7 +71,28 @@ export class GanttViewCustom extends GanttView {
                 fontSize:   `${primaryPx}px`,
                 fontFamily: 'Inter, sans-serif',
             };
-            points.push(point);
+            return point;
+        };
+
+        for (let i = 0; i < days.length; i += 10) {
+            const segCount      = Math.min(10, days.length - i);
+            const midpointIndex = Math.min(i + 5, days.length - 1);
+            const xCenter       = i * this.getCellWidth() + (segCount * this.getCellWidth()) / 2;
+
+            // If a month boundary falls in this segment, show it instead of the midpoint
+            let boundaryFound = false;
+            for (let j = i + 1; j < i + segCount; j++) {
+                if (days[j].getDate() === 1) {
+                    const remaining = (i + segCount) - j;
+                    points.push(makePoint(j, (j + remaining / 2) * this.getCellWidth()));
+                    boundaryFound = true;
+                    break;
+                }
+            }
+
+            if (!boundaryFound) {
+                points.push(makePoint(midpointIndex, xCenter));
+            }
         }
         return points;
     }
