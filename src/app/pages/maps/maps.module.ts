@@ -1,7 +1,6 @@
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Routes } from '@angular/router';
-import { GoogleMapsModule } from '@angular/google-maps';
 import { DirectivesModule } from '../../theme/directives/directives.module';
 import { GoogleMapsComponent } from './google-maps/google-maps.component';
 import { LeafletMapsComponent } from './leaflet-maps/leaflet-maps.component';
@@ -20,7 +19,6 @@ export const routes: Routes = [
     CommonModule,
     DirectivesModule,
     RouterModule.forChild(routes),
-    GoogleMapsModule,
     NgxDatatableModule
   ],
   declarations: [GoogleMapsComponent, LeafletMapsComponent, VectorMapsComponent]

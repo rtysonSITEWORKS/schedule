@@ -57,14 +57,7 @@
               "node_modules/jquery/dist/jquery.min.js",
               "node_modules/jquery-ui-dist/jquery-ui.min.js",
               "node_modules/popper.js/dist/umd/popper.min.js",
-              "node_modules/bootstrap/dist/js/bootstrap.min.js",
-              "node_modules/jquery-knob/dist/jquery.knob.min.js",
-              "node_modules/d3/d3.min.js",
-              "node_modules/topojson/dist/topojson.min.js",
-              "node_modules/datamaps/dist/datamaps.all.hires.min.js",
-              "node_modules/moment/moment.js",
-              "node_modules/fullcalendar/dist/fullcalendar.min.js",
-              "node_modules/dropzone/dist/dropzone.js"
+              "node_modules/bootstrap/dist/js/bootstrap.min.js"
             ],
             "allowedCommonJsDependencies": [ 
               "leaflet-map",
@@ -86,8 +79,8 @@
               "budgets": [
                 {
                   "type": "initial",
-                  "maximumWarning": "3mb",
-                  "maximumError": "4mb"
+                  "maximumWarning": "2.5mb",
+                  "maximumError": "3mb"
                 },
                 {
                   "type": "anyComponentStyle",

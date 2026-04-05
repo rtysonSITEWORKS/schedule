@@ -1,6 +1,4 @@
 import { Directive, ElementRef } from '@angular/core';
-import 'metrojs/release/MetroJs.Full/MetroJs.min.js';
-
 @Directive ({
   selector: '[live-tile]'
 })

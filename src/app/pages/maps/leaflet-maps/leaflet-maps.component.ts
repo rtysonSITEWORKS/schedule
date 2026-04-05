@@ -1,5 +1,4 @@
 import { Component, ViewEncapsulation } from '@angular/core';
-import "leaflet-map";  
 
 @Component({
   selector: 'az-leaflet-maps',
