@@ -79,19 +79,24 @@ export class GanttViewCustom extends GanttView {
             const midpointIndex = Math.min(i + 5, days.length - 1);
             const xCenter       = i * this.getCellWidth() + (segCount * this.getCellWidth()) / 2;
 
-            // If a month boundary falls in this segment, show it instead of the midpoint
-            let boundaryFound = false;
+            // Check for a month boundary in this segment
+            let boundaryJ = -1;
             for (let j = i + 1; j < i + segCount; j++) {
-                if (days[j].getDate() === 1) {
-                    const remaining = (i + segCount) - j;
-                    points.push(makePoint(j, (j + remaining / 2) * this.getCellWidth()));
-                    boundaryFound = true;
-                    break;
-                }
+                if (days[j].getDate() === 1) { boundaryJ = j; break; }
             }
 
-            if (!boundaryFound) {
+            if (boundaryJ === -1) {
+                // No boundary — single midpoint label
                 points.push(makePoint(midpointIndex, xCenter));
+            } else {
+                const before = boundaryJ - i;
+                const after  = (i + segCount) - boundaryJ;
+                // Previous month: only if 3+ days exist before boundary (avoids crowding)
+                if (before >= 3) {
+                    points.push(makePoint(i + Math.floor(before / 2), (i + before / 2) * this.getCellWidth()));
+                }
+                // New month: centered in remaining days after boundary
+                points.push(makePoint(boundaryJ, (boundaryJ + after / 2) * this.getCellWidth()));
             }
         }
         return points;
