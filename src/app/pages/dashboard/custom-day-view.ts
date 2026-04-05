@@ -57,21 +57,26 @@ export class GanttViewCustom extends GanttView {
         const points: GanttDatePoint[] = [];
         const primaryPx = Math.min(Math.round(this.getCellWidth() * 0.50), 36);
 
-        // One label per 7-day week, labelled with the month of the week's midpoint.
-        // This ensures every visible segment always shows the current month name.
-        for (let i = 0; i < days.length; i += 12) {
-            const weekStart     = new GanttDate(days[i]);
-            const weekCount     = Math.min(12, days.length - i);
-            const midpointIndex = Math.min(i + 6, days.length - 1);
-            const midday        = new GanttDate(days[midpointIndex]);
-            const xCenter       = i * this.getCellWidth() + (weekCount * this.getCellWidth()) / 2;
+        // One label per calendar month, centered within that month's day range.
+        const monthGroups = new Map<string, number[]>();
+        days.forEach((day, index) => {
+            const key = `${day.getFullYear()}-${day.getMonth()}`;
+            if (!monthGroups.has(key)) monthGroups.set(key, []);
+            monthGroups.get(key).push(index);
+        });
+
+        monthGroups.forEach((indices) => {
+            const firstIndex  = indices[0];
+            const centerIndex = indices[Math.floor(indices.length / 2)];
+            const labelDate   = new GanttDate(days[centerIndex]);
+            const xCenter     = (firstIndex + indices.length / 2) * this.getCellWidth();
 
             const point = new GanttDatePoint(
-                weekStart,
-                midday.format('MMMM yyyy'),
+                new GanttDate(days[firstIndex]),
+                labelDate.format('MMMM yyyy'),
                 xCenter,
                 PRIMARY_Y,
-                { isWeekend: false, isToday: midday.isToday() }
+                { isWeekend: false, isToday: false }
             );
             point.style = {
                 fontWeight: 'bold',
@@ -80,7 +85,7 @@ export class GanttViewCustom extends GanttView {
                 fontFamily: 'Inter, sans-serif',
             };
             points.push(point);
-        }
+        });
         return points;
     }
 
