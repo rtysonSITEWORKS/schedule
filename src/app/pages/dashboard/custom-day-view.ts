@@ -56,24 +56,15 @@ export class GanttViewCustom extends GanttView {
         const days      = eachDayOfInterval({ start: this.start.value, end: this.end.value });
         const points: GanttDatePoint[] = [];
         const primaryPx = Math.min(Math.round(this.getCellWidth() * 0.50), 36);
+        let lastLabel   = '';
 
-        // One label per calendar month, centered within that month's day range.
-        const monthGroups = new Map<string, number[]>();
-        days.forEach((day, index) => {
-            const key = `${day.getFullYear()}-${day.getMonth()}`;
-            if (!monthGroups.has(key)) monthGroups.set(key, []);
-            monthGroups.get(key).push(index);
-        });
-
-        monthGroups.forEach((indices) => {
-            const firstIndex  = indices[0];
-            const centerIndex = indices[Math.floor(indices.length / 2)];
-            const labelDate   = new GanttDate(days[centerIndex]);
-            const xCenter     = (firstIndex + indices.length / 2) * this.getCellWidth();
-
+        const addPoint = (index: number, xCenter: number) => {
+            const label = new GanttDate(days[index]).format('MMMM yyyy');
+            if (label === lastLabel) return;
+            lastLabel = label;
             const point = new GanttDatePoint(
-                new GanttDate(days[firstIndex]),
-                labelDate.format('MMMM yyyy'),
+                new GanttDate(days[index]),
+                label,
                 xCenter,
                 PRIMARY_Y,
                 { isWeekend: false, isToday: false }
@@ -85,7 +76,23 @@ export class GanttViewCustom extends GanttView {
                 fontFamily: 'Inter, sans-serif',
             };
             points.push(point);
-        });
+        };
+
+        for (let i = 0; i < days.length; i += 10) {
+            const segCount      = Math.min(10, days.length - i);
+            const midpointIndex = Math.min(i + 5, days.length - 1);
+            const xCenter       = i * this.getCellWidth() + (segCount * this.getCellWidth()) / 2;
+
+            // If a month boundary falls in this segment, emit a label there first
+            for (let j = i + 1; j < i + segCount; j++) {
+                if (days[j].getDate() === 1) {
+                    addPoint(j, j * this.getCellWidth() + this.getCellWidth() / 2);
+                    break;
+                }
+            }
+
+            addPoint(midpointIndex, xCenter);
+        }
         return points;
     }
 
