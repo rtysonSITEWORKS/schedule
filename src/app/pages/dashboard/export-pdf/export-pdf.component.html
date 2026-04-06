@@ -8,7 +8,7 @@
   <div class="export-body">
 
     <p class="export-desc">
-      Generates a formatted PDF of all active projects and tasks, ready to attach and email.
+      Generates a formatted PDF of the selected projects and tasks, ready to attach and email.
     </p>
 
     <div class="export-summary">
@@ -30,6 +30,48 @@
       </div>
     </div>
 
+    <div class="filter-section">
+      <div class="filter-section-title">Filters</div>
+
+      <div class="filter-row">
+        <label class="filter-label">Projects</label>
+        <ng-select [items]="projectOptions"
+                   bindLabel="label"
+                   bindValue="value"
+                   [multiple]="true"
+                   placeholder="Select projects"
+                   [(ngModel)]="selectedProjectIds"
+                   [disabled]="exporting">
+          <ng-template ng-multi-label-tmp let-items="items">
+            <span class="filter-count-label">
+              {{ items.length === projectOptions.length
+                  ? 'All (' + items.length + ')'
+                  : items.length + ' of ' + projectOptions.length + ' selected' }}
+            </span>
+          </ng-template>
+        </ng-select>
+      </div>
+
+      <div class="filter-row">
+        <label class="filter-label">Foreman</label>
+        <ng-select [items]="foremanOptions"
+                   bindLabel="label"
+                   bindValue="value"
+                   [multiple]="true"
+                   placeholder="Select foreman"
+                   [(ngModel)]="selectedForemans"
+                   [disabled]="exporting">
+          <ng-template ng-multi-label-tmp let-items="items">
+            <span class="filter-count-label">
+              {{ items.length === foremanOptions.length
+                  ? 'All (' + items.length + ')'
+                  : items.length + ' of ' + foremanOptions.length + ' selected' }}
+            </span>
+          </ng-template>
+        </ng-select>
+      </div>
+    </div>
+
     <div class="filename-row">
       <label class="filename-label">Filename</label>
       <div class="filename-input-group">
@@ -37,28 +79,29 @@
           class="filename-input"
           [(ngModel)]="filename"
           placeholder="Project_Schedule_2025-01-01" />
-          <span class="pdf-suffix">.pdf</span>
-        </div>
+        <span class="pdf-suffix">.pdf</span>
       </div>
-
-      <div class="export-legend">
-        <span class="legend-item active">● Active</span>
-        <span class="legend-item on-hold">● On Hold</span>
-        <span class="legend-item action-needed">● Action Needed</span>
-      </div>
-
     </div>
 
-    <div class="export-footer">
-      <button class="btn-cancel" (click)="cancel()" [disabled]="exporting">Cancel</button>
-      <button class="btn-export" (click)="export()" [disabled]="exporting || !filename">
-        @if (!exporting) {
-          <span>⬇ Export PDF</span>
-        }
-        @if (exporting) {
-          <span>Generating…</span>
-        }
-      </button>
+    <div class="export-legend">
+      <span class="legend-item active">● Active</span>
+      <span class="legend-item on-hold">● On Hold</span>
+      <span class="legend-item action-needed">● Action Needed</span>
     </div>
 
   </div>
+
+  <div class="export-footer">
+    <button class="btn-cancel" (click)="cancel()" [disabled]="exporting">Cancel</button>
+    <button class="btn-export" (click)="export()"
+            [disabled]="exporting || !filename || selectedProjectIds.length === 0">
+      @if (!exporting) {
+        <span>⬇ Export PDF</span>
+      }
+      @if (exporting) {
+        <span>Generating…</span>
+      }
+    </button>
+  </div>
+
+</div>

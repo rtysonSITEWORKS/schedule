@@ -240,7 +240,7 @@ export class DashboardComponent implements AfterViewInit {
 
   generatePDF(): void {
     this.dialog.open(ExportPdfComponent, {
-      width: '520px',
+      width: '760px',
       data: {
         items:          this.originalItems,
         groups:         this.originalGroups,

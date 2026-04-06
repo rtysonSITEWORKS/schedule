@@ -1,9 +1,6 @@
-import { Component, Inject } from '@angular/core';
-import { FormGroup, FormBuilder, Validators } from '@angular/forms';
+import { Component, Inject, OnInit } from '@angular/core';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { DataService } from '../data.service';
-import { GanttItem, GanttGroup } from '@worktile/gantt';
-import { Subscription } from 'rxjs';
 import { ToastrService } from 'ngx-toastr';
 
 @Component({
@@ -11,95 +8,66 @@ import { ToastrService } from 'ngx-toastr';
   templateUrl: './add-task.component.html',
   styleUrls: ['./add-task.component.scss']
 })
-export class AddTaskComponent {
-  availableTasks: any[] = [];
-  subs = new Subscription();
+export class AddTaskComponent implements OnInit {
+  availableTasks: { label: string; value: string }[] = [];
+  groups: { id: any; title: string }[] = [];
 
-  taskrange: FormGroup;
-  isFormValid: boolean = false;
-  isFormSubmitted: boolean = false;
-  isTaskValid: boolean = false;  // Define the property
+  selectedProject: any = null;
+  selectedTask: any    = null;
+  startDate            = '';
+  endDate              = '';
+  isLoading            = false;
 
-  items: GanttItem[] = [];
-  groups: GanttGroup[] = [];
-  selectedProject: any = {};
-  selectedTask: any = {};
-  isLoading = false;
-  
-  constructor(@Inject(MAT_DIALOG_DATA) public data: any,
-  public dialogRef: MatDialogRef<AddTaskComponent>, private ds: DataService, private formBuilder: FormBuilder, private toastr: ToastrService) {
-    this.subs.add(this.ds.getTaskList()
-        .subscribe((res:any) => {
-          this.availableTasks = res.map(user => {
-            return {
-              label: `${user.task}`,
-              value: `${user.task}`,
-              // You can include other properties if needed
-            };
-          });
-          this.availableTasks = [...this.availableTasks];
-        }));
-    this.ds.getAllItems().subscribe((data) => {
-      this.groups = data.groups;
-      this.items = data.items;
-      
-      this.groups = data.groups.filter(group => group.id !== -1);  // Exclude holiday groups
-      this.items = data.items.filter(item => item.groupId !== -1);  // Exclude holiday items
-    });
-    this.watchSelectedTask();
-
-  }
-  watchSelectedTask() {
-    this.selectedTask = null;
-    this.isTaskValid = false;
-  }
+  constructor(
+    @Inject(MAT_DIALOG_DATA) public data: any,
+    public dialogRef: MatDialogRef<AddTaskComponent>,
+    private ds: DataService,
+    private toastr: ToastrService
+  ) {}
 
   ngOnInit(): void {
+    // Pre-fill dates if passed from right-click context menu
     const pre = this.data || {};
-    this.taskrange = this.formBuilder.group({
-      start: [pre.defaultStart ?? '', Validators.required],
-      end:   [pre.defaultEnd   ?? '', Validators.required]
+    if (pre.defaultStart instanceof Date) {
+      this.startDate = pre.defaultStart.toISOString().slice(0, 10);
+    }
+    if (pre.defaultEnd instanceof Date) {
+      this.endDate = pre.defaultEnd.toISOString().slice(0, 10);
+    }
+
+    // Load task types
+    this.ds.getTaskList().subscribe((res: any[]) => {
+      this.availableTasks = res.map(t => ({ label: t.task, value: t.task }));
     });
 
-    // Subscribe to valueChanges of the form to update isFormValid
-    this.taskrange.valueChanges.subscribe(() => {
-      this.isFormValid = this.taskrange.valid;
+    // Load projects
+    this.ds.getAllItems().subscribe((data: any) => {
+      this.groups = (data.groups || []).filter((g: any) => g.id !== -1);
     });
   }
 
-  onTaskChange(task: any) {
-    this.selectedTask = task;
-    this.isTaskValid = task && Object.keys(task).length > 0;
-  }
-
-
-  submit(){
+  submit(): void {
+    if (!this.selectedProject || !this.selectedTask || !this.startDate || !this.endDate) { return; }
     this.isLoading = true;
-    let task = {
-      name: this.selectedTask,
+
+    const task = {
+      name:       this.selectedTask,
       project_id: this.selectedProject,
-      start: new Date(this.taskrange.get('start').value),
-      end: new Date(this.taskrange.get('end').value),
+      start:      `${this.startDate}T00:00:00Z`,
+      end:        `${this.endDate}T00:00:00Z`,
     };
 
-    this.subs.add(
-      this.ds.createTask(task).subscribe({
-        next: () => {
-          this.toastr.success('Task created successfully!', 'Success');
-          this.dialogRef.close({});
-          this.isLoading = false;
-        },
-        error: (err) => {
-          console.error('Error creating task:', err);
-          this.toastr.error('Failed to create task. Please try again.', 'Error');
-          this.isLoading = false;
-        }
-      })
-    );
-    
+    this.ds.createTask(task).subscribe({
+      next: () => {
+        this.toastr.success('Task created!', 'Success');
+        this.dialogRef.close(true);
+      },
+      error: () => {
+        this.toastr.error('Failed to create task.', 'Error');
+        this.isLoading = false;
+      }
+    });
   }
 
-  cancel(){
-    this.dialogRef.close({  });
-  }
+  cancel(): void { this.dialogRef.close(false); }
 }
