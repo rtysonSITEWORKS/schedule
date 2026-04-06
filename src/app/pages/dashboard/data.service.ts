@@ -1,7 +1,7 @@
 import {Injectable} from "@angular/core";
-import {Observable, of} from "rxjs";
-import { shareReplay } from "rxjs/operators";
-import {HttpClient} from "@angular/common/http";
+import {Observable, of, forkJoin} from "rxjs";
+import { shareReplay, map } from "rxjs/operators";
+import { HttpClient } from "@angular/common/http";
 import { random } from "./helper";
 import { addDays, GanttGroup, GanttItem, getUnixTime } from "@worktile/gantt";
 import { environment } from "src/environments/environment";
@@ -270,6 +270,43 @@ export class DataService {
 
   deleteRow(row: any){
     this.activeProjects = this.activeProjects.filter(item => item.name !== row.name);
+  }
+
+  // ── Foremen CRUD ─────────────────────────────────────────────────────────────
+  createForeman(firstname: string, lastname: string): Observable<any> {
+    this.foremansCache$ = null; // bust cache so next load re-fetches
+    // Backend POST expects lowercase keys: { firstname, lastname }
+    return this.http.post<any>(`${this.apiBaseUrl}foremen`, { firstname, lastname });
+  }
+
+  updateForeman(id: number, firstName: string, lastName: string): Observable<any> {
+    this.foremansCache$ = null;
+    return this.http.put<any>(`${this.apiBaseUrl}foremen/${id}`, { firstName, lastName });
+  }
+
+  deleteForeman(id: number): Observable<any> {
+    this.foremansCache$ = null;
+    return this.http.delete<any>(`${this.apiBaseUrl}foremen/${id}`);
+  }
+
+  // ── Projects CRUD ─────────────────────────────────────────────────────────
+  // ── All projects (active + on-hold + completed) ───────────────────────────
+  getAllProjects(): Observable<Project[]> {
+    return forkJoin([
+      this.http.get<any[]>(`${this.route}getActiveProjects`),
+      this.http.get<any[]>(`${this.route}getOnHoldProjects`),
+      this.http.get<any[]>(`${this.route}getCompletedProjects`),
+    ]).pipe(
+      map(([active, onHold, completed]) => [...active, ...onHold, ...completed])
+    );
+  }
+
+  updateProject(id: number, data: any): Observable<any> {
+    return this.http.put<any>(`${this.route}update/${id}`, data);
+  }
+
+  deleteProject(id: number): Observable<any> {
+    return this.http.delete<any>(`${this.route}${id}`);
   }
 }
 

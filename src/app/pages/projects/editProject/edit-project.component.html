@@ -1,0 +1,55 @@
+<div class="edit-dialog">
+  <div class="dialog-header"><span>Edit Project</span></div>
+  <div class="dialog-body">
+
+    <div class="field-pair">
+      <div class="field-row">
+        <label>Project Name</label>
+        <input [(ngModel)]="name" class="form-input" placeholder="Project name" [disabled]="saving">
+      </div>
+      <div class="field-row">
+        <label>Company</label>
+        <input [(ngModel)]="company" class="form-input" placeholder="Company name" [disabled]="saving">
+      </div>
+    </div>
+
+    <div class="field-pair">
+      <div class="field-row">
+        <label>Status</label>
+        <select [(ngModel)]="status" class="form-input" [disabled]="saving">
+          <option *ngFor="let opt of statusOptions" [value]="opt.value">{{ opt.label }}</option>
+        </select>
+      </div>
+      <div class="field-row">
+        <label>Foreman</label>
+        <ng-select class="form-ng-select"
+                   [items]="foremenOptions"
+                   bindLabel="label"
+                   bindValue="value"
+                   [clearable]="true"
+                   placeholder="Select foreman"
+                   [(ngModel)]="foremanName"
+                   [disabled]="saving">
+        </ng-select>
+      </div>
+    </div>
+
+    <div class="field-pair">
+      <div class="field-row">
+        <label>Start Date</label>
+        <input type="date" [(ngModel)]="start" class="form-input" [disabled]="saving">
+      </div>
+      <div class="field-row">
+        <label>End Date</label>
+        <input type="date" [(ngModel)]="end" class="form-input" [disabled]="saving">
+      </div>
+    </div>
+
+    <div class="dialog-actions">
+      <button class="btn-cancel" (click)="cancel()" [disabled]="saving">Cancel</button>
+      <button class="btn-submit" (click)="submit()" [disabled]="saving">
+        {{ saving ? 'Saving…' : 'Save Changes' }}
+      </button>
+    </div>
+  </div>
+</div>

@@ -39,107 +39,248 @@ ngx-gantt {
   height: 100%;
 }
 
-// ─── Toolbar ─────────────────────────────────────────────────────────────────
+// ─── Unified App Toolbar ──────────────────────────────────────────────────────
 
-.toolbar-row {
-  padding: 6px 8px 4px;
+.app-toolbar {
+  display:        flex;
+  align-items:    stretch;
+  height:         72px;
+  padding:        0;
+  background:     #2c3e50;
+  box-shadow:     0 2px 8px rgba(0,0,0,0.18);
+  flex-shrink:    0;
+}
 
-  ng-select {
-    width: 70%;
+// Equal-width sections — all centered
+.tb-section {
+  flex:            1;
+  display:         flex;
+  align-items:     center;
+  justify-content: center;
+  padding:         0 20px;
+}
+
+.tb-section-brand {
+  flex:            0 0 auto;
+  padding:         0 24px;
+  justify-content: flex-start;
+}
+
+.tb-section-nav {
+  flex:            0 0 auto;
+  gap:             4px;
+  padding:         0 16px;
+}
+
+.tb-nav-link {
+  display:        flex;
+  align-items:    center;
+  gap:            7px;
+  padding:        0 16px;
+  height:         100%;
+  color:          rgba(255,255,255,0.7);
+  font-family:    'Inter', sans-serif;
+  font-size:      14px;
+  font-weight:    600;
+  text-decoration: none;
+  border-bottom:  3px solid transparent;
+  transition:     color 0.15s, border-color 0.15s, background 0.15s;
+  white-space:    nowrap;
+
+  i { font-size: 15px; }
+
+  &:hover {
+    color:       #fff;
+    background:  rgba(255,255,255,0.07);
+    border-bottom-color: rgba(255,255,255,0.3);
+    text-decoration: none;
+  }
+
+  &.tb-nav-link--active {
+    color:             #fff;
+    border-bottom-color: #3498db;
+    background:        rgba(255,255,255,0.08);
   }
 }
 
-// ─── Nav toolbar — fixed inside the top navbar ───────────────────────────────
-
-.dash-nav-actions {
-  position:    fixed;
-  top:         0;
-  left:        400px;   // clears burger + logo + gaps
-  right:       0;
-  height:      60px;
-  display:     flex;
-  align-items: center;
-  gap:         8px;
-  padding:     0 16px;
-  z-index:     1031;    // above Bootstrap navbar (1030)
-  pointer-events: none; // let clicks fall through to navbar except on buttons
-  > * { pointer-events: auto; }
+.tb-section-zoom {
+  flex:            0 0 auto;
+  padding:         0 20px;
 }
 
-.nav-toolbar-btn {
-  padding:       5px 12px;
+// Logo
+.tb-logo {
+  height:      46px;
+  width:       auto;
+  flex-shrink: 0;
+  opacity:     0.95;
+}
+
+// Vertical separator — full toolbar height
+.tb-sep {
+  width:       1px;
+  align-self:  stretch;
+  background:  rgba(255,255,255,0.18);
+  flex-shrink: 0;
+}
+
+// Filter group: label + dropdown stacked, fills section width
+.tb-filter-group {
+  display:        flex;
+  flex-direction: column;
+  gap:            4px;
+  width:          100%;
+}
+
+.tb-filter-label {
+  font-size:   11px;
+  font-weight: 700;
+  font-family: 'Inter', sans-serif;
+  color:       rgba(255,255,255,0.6);
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  line-height: 1;
+}
+
+// Compact ng-select inside the toolbar
+.tb-select {
+  .ng-select-container {
+    height:           34px !important;
+    min-height:       34px !important;
+    background:       rgba(255,255,255,0.10) !important;
+    border:           1px solid rgba(255,255,255,0.22) !important;
+    border-radius:    5px !important;
+    color:            #fff !important;
+    font-family:      'Inter', sans-serif !important;
+    font-size:        13px !important;
+  }
+  .ng-placeholder    { color: rgba(255,255,255,0.45) !important; }
+  .ng-value-label    { color: #fff !important; font-size: 14px !important; }
+  .ng-arrow-wrapper .ng-arrow { border-color: rgba(255,255,255,0.5) transparent transparent !important; }
+  .ng-clear-wrapper  { color: rgba(255,255,255,0.55) !important; }
+  &.ng-select-opened .ng-select-container { border-color: rgba(255,255,255,0.5) !important; }
+  .ng-dropdown-panel {
+    background: #2c3e50 !important;
+    border:     1px solid rgba(255,255,255,0.2) !important;
+    .ng-option {
+      background:  #2c3e50 !important;
+      color:       rgba(255,255,255,0.85) !important;
+      font-size:   13px !important;
+      font-family: 'Inter', sans-serif !important;
+      &:hover, &.ng-option-marked { background: rgba(255,255,255,0.12) !important; }
+      &.ng-option-selected        { background: rgba(255,255,255,0.18) !important; color: #fff !important; }
+    }
+  }
+}
+
+// Action buttons
+.tb-actions {
+  display:     flex;
+  align-items: center;
+  gap:         6px;
+  flex-shrink: 0;
+}
+
+.tb-btn {
+  padding:       6px 16px;
+  height:        34px;
   font-size:     13px;
   font-family:   'Inter', sans-serif;
   font-weight:   600;
   cursor:        pointer;
-  background:    rgba(255,255,255,0.12);
-  border:        1px solid rgba(255,255,255,0.28);
+  background:    rgba(255,255,255,0.10);
+  border:        1px solid rgba(255,255,255,0.22);
   border-radius: 5px;
-  color:         #fff;
+  color:         rgba(255,255,255,0.9);
   white-space:   nowrap;
-  transition:    background 0.15s;
+  transition:    background 0.15s, border-color 0.15s;
+  display:       flex;
+  align-items:   center;
 
-  &:hover  { background: rgba(255,255,255,0.22); }
-  &:active { background: rgba(255,255,255,0.30); }
+  &:hover  { background: rgba(255,255,255,0.18); border-color: rgba(255,255,255,0.4); }
+  &:active { background: rgba(255,255,255,0.26); }
 }
 
-.nav-zoom-controls {
-  display:     inline-flex;
-  align-items: center;
-  gap:         6px;
-  margin-left: 8px;
-  background:  rgba(255,255,255,0.10);
-  border:      1px solid rgba(255,255,255,0.22);
+.tb-btn-accent {
+  background:   #2980b9;
+  border-color: #2980b9;
+  color:        #fff;
+  &:hover  { background: #3498db; border-color: #3498db; }
+  &:active { background: #1a6a9a; }
+}
+
+// Search input inside toolbar (used on Users / Projects pages)
+.tb-search {
+  height:        34px;
+  padding:       0 12px;
+  border:        1px solid rgba(255,255,255,0.22);
+  border-radius: 6px;
+  background:    rgba(255,255,255,0.10);
+  color:         #fff;
+  font-size:     13px;
+  font-family:   'Inter', sans-serif;
+  width:         180px;
+  outline:       none;
+  &::placeholder { color: rgba(255,255,255,0.45); }
+  &:focus { border-color: rgba(255,255,255,0.5); background: rgba(255,255,255,0.16); }
+}
+
+// Page title shown in toolbar (Users / Projects)
+.tb-page-title {
+  color:       rgba(255,255,255,0.75);
+  font-size:   13px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+// Zoom pill
+.tb-zoom {
+  display:       flex;
+  align-items:   center;
+  gap:           4px;
+  background:    rgba(255,255,255,0.08);
+  border:        1px solid rgba(255,255,255,0.18);
   border-radius: 20px;
-  padding:     4px 12px;
+  padding:       4px 12px;
+  flex-shrink:   0;
 }
 
-.nav-zoom-label {
-  font-size:   12px;
-  font-weight: 600;
-  font-family: 'Inter', sans-serif;
-  color:       rgba(255,255,255,0.85);
-  white-space: nowrap;
-}
-
-.nav-zoom-value {
-  font-size:  12px;
-  font-family: 'Inter', sans-serif;
-  color:      rgba(255,255,255,0.9);
-  white-space: nowrap;
-  min-width:  36px;
-  text-align: center;
-}
-
-.nav-zoom-btn {
+.tb-zoom-btn {
   background:    none;
-  border:        1px solid rgba(255,255,255,0.3);
+  border:        1px solid rgba(255,255,255,0.25);
   border-radius: 50%;
-  width:         26px;
-  height:        26px;
-  font-size:     17px;
+  width:         28px;
+  height:        28px;
+  font-size:     18px;
   line-height:   1;
   cursor:        pointer;
   display:       flex;
   align-items:   center;
   justify-content: center;
   padding:       0;
-  color:         #fff;
+  color:         rgba(255,255,255,0.85);
+  transition:    background 0.12s;
 
-  &:hover  { background: rgba(255,255,255,0.18); border-color: rgba(255,255,255,0.6); }
-  &:active { background: rgba(255,255,255,0.28); }
+  &:hover  { background: rgba(255,255,255,0.15); border-color: rgba(255,255,255,0.5); }
+  &:active { background: rgba(255,255,255,0.25); }
 }
 
-.nav-zoom-reset { font-size: 14px; }
+.tb-zoom-reset { font-size: 15px; }
+
+.tb-zoom-val {
+  font-size:   13px;
+  font-family: 'Inter', sans-serif;
+  color:       rgba(255,255,255,0.85);
+  min-width:   44px;
+  text-align:  center;
+  font-weight: 600;
+}
 
 // ─── Gantt frame ─────────────────────────────────────────────────────────────
 
 .gantt-frame {
   position: relative;
-  border: 2px solid #c8d6e8;
-  border-radius: 6px;
   overflow: hidden;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.12);
 }
 
 // Zoom controls inline in the toolbar
@@ -307,11 +448,13 @@ ngx-gantt {
 .gantt-calendar-header svg text.primary-text {
   font-family: 'Inter', sans-serif !important;
   font-weight: bold !important;
+  font-size: 15px !important;
 }
 
 .gantt-calendar-header svg text.secondary-text {
   font-family: 'Inter', sans-serif !important;
   font-weight: bold !important;
+  font-size: 18px !important;
 }
 
 // Hide the library's horizontal divider line — it was drawn at y=44 (inside our

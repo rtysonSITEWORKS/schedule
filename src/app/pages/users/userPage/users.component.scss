@@ -1,5 +1,60 @@
-.button-container {
-    display: flex;
-    justify-content: flex-end;
-    padding: 10px;
+.page-body {
+  padding: 24px;
+  height: calc(100vh - 72px);
+  overflow-y: auto;
+  background: #f5f6fa;
+}
+
+.row-actions {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.action-btn {
+  border-radius: 4px;
+  width: 28px;
+  height: 28px;
+  cursor: pointer;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid transparent;
+  background: transparent;
+  transition: background 0.15s, color 0.15s;
+}
+
+.edit-btn {
+  border-color: #2980b9;
+  color: #2980b9;
+  &:hover { background: #2980b9; color: #fff; }
+}
+
+.del-btn {
+  border-color: #c0392b;
+  color: #c0392b;
+  &:hover { background: #c0392b; color: #fff; }
+}
+
+/* Shrink logo on this page */
+::ng-deep .tb-logo { height: 35px !important; }
+
+/* datatable overrides */
+::ng-deep .ngx-datatable.bootstrap .datatable-header {
+  background: #2c3e50;
+  color: #fff;
+  .datatable-header-cell {
+    color: #fff;
+    font-weight: 600;
+    font-size: 15px;
+  }
+}
+
+::ng-deep .ngx-datatable.bootstrap .datatable-body-cell {
+  font-size: 15px;
+}
+
+::ng-deep .ngx-datatable.bootstrap .datatable-body-row:hover {
+  background: #eaf3fb;
 }

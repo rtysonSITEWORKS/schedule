@@ -11,13 +11,14 @@ import { SidebarService } from '../sidebar/sidebar.service';
 })
 
 export class NavbarComponent {
-    public isMenuCollapsed:boolean = false;
+    public isMenuCollapsed:boolean = true;
     public name: any;
 
     constructor(private _state:AppState, private _sidebarService:SidebarService) {
         this._state.subscribe('menu.isCollapsed', (isCollapsed: boolean) => {
             this.isMenuCollapsed = isCollapsed;
         });
+        this._state.notifyDataChanged('menu.isCollapsed', true);
         this.name = localStorage.getItem('name');
         console.log(this.name);
     }

@@ -1,4 +1,4 @@
-import { Component, ViewChild, ViewEncapsulation, HostBinding } from "@angular/core";
+import { Component, ViewChild, ViewEncapsulation, HostBinding, ElementRef, AfterViewInit, HostListener } from "@angular/core";
 import {
   GanttBarClickEvent,
   GanttDate,
@@ -36,7 +36,7 @@ registerView(customViewType, GanttViewCustom);
   templateUrl: './dashboard.component.html',
   styleUrls: ['./dashboard.component.scss']
 })
-export class DashboardComponent {
+export class DashboardComponent implements AfterViewInit {
 
   viewType: GanttViewType = customViewType as GanttViewType;
 
@@ -52,8 +52,8 @@ export class DashboardComponent {
   showGantt = false; // stays false until data loads + column widths are calculated
 
   // Column widths — fixed at these values across all zoom levels
-  readonly col1Width = '350px';
-  readonly col2Width = '250px';
+  readonly col1Width = '425px';
+  readonly col2Width = '300px';
 
   // Gantt zoom — calendar, bars, column text, and row heights all scale together
   readonly ZOOM_DEFAULT = 55;
@@ -77,7 +77,10 @@ export class DashboardComponent {
   };
 
   @HostBinding('class.gantt-example-component') hostClass = true;
-  @ViewChild('gantt') ganttComponent: NgxGanttComponent;
+  @ViewChild('gantt')    ganttComponent: NgxGanttComponent;
+  @ViewChild('toolbar')  toolbarRef: ElementRef<HTMLElement>;
+
+  ganttFrameHeight = 500; // sensible fallback until measured
 
   selectedItem: CustomGanttItem | null = null;
 
@@ -123,6 +126,16 @@ export class DashboardComponent {
   private nameDictionary: { [key: string]: string } = {};
 
   constructor(private ds: DataService, public dialog: MatDialog) {}
+
+  ngAfterViewInit(): void {
+    this.updateGanttHeight();
+  }
+
+  @HostListener('window:resize')
+  updateGanttHeight(): void {
+    const toolbarH = this.toolbarRef?.nativeElement?.offsetHeight ?? 0;
+    this.ganttFrameHeight = window.innerHeight - toolbarH;
+  }
 
   ngOnInit(): void {
     this.ds.getForemans().subscribe((data: any[]) => {
@@ -299,6 +312,22 @@ export class DashboardComponent {
     const d    = new Date(base);
     d.setDate(d.getDate() + day);
     return d;
+  }
+
+  // ── Arrow-key scrolling ────────────────────────────────────────────────────
+  onGanttKeydown(event: KeyboardEvent): void {
+    const arrowKeys = ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'];
+    if (!arrowKeys.includes(event.key)) { return; }
+    event.preventDefault();
+    const step = 80;
+    const wrapper = event.currentTarget as HTMLElement;
+    // ngx-gantt renders its own scroll containers internally
+    const hScroll = wrapper.querySelector<HTMLElement>('.gantt-main-container');
+    const vScroll = wrapper.querySelector<HTMLElement>('.gantt-scroll-container');
+    if (event.key === 'ArrowLeft')  { (hScroll || wrapper).scrollLeft -= step; }
+    if (event.key === 'ArrowRight') { (hScroll || wrapper).scrollLeft += step; }
+    if (event.key === 'ArrowUp')    { (vScroll || wrapper).scrollTop  -= step; }
+    if (event.key === 'ArrowDown')  { (vScroll || wrapper).scrollTop  += step; }
   }
 
   // ── Right-click context menu ───────────────────────────────────────────────

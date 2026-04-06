@@ -5,32 +5,23 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { DirectivesModule } from '../../theme/directives/directives.module';
 import { PipesModule } from '../../theme/pipes/pipes.module';
 import { DashboardComponent } from './dashboard.component';
-import { TodoComponent } from './todo/todo.component';
-import { ChatComponent } from './chat/chat.component';
-import { FeedComponent } from './feed/feed.component';
-import { DatamapComponent } from './datamap/datamap.component';
-import { DynamicChartComponent } from './dynamic-chart/dynamic-chart.component';
-import { NgChartsModule } from 'ng2-charts';
 import { ToastrModule } from 'ngx-toastr';
 import { DayPilotModule } from '@daypilot/daypilot-lite-angular';
 import { DashboardService } from './dashboard.service';
 import { GANTT_GLOBAL_CONFIG, NgxGanttModule } from '@worktile/gantt';
 import { MatMenuModule } from '@angular/material/menu';
-import {CdkMenu, CdkMenuItem, CdkMenuTrigger} from '@angular/cdk/menu';
+import { CdkMenu, CdkMenuItem, CdkMenuTrigger } from '@angular/cdk/menu';
 import { ActionNeededComponent } from './action-needed/action-needed.component';
 import { NgSelectModule } from '@ng-select/ng-select';
 import { AddTaskComponent } from './add-task/add-task.component';
 import { MatNativeDateModule } from '@angular/material/core';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatInputModule } from '@angular/material/input';
-import { MatTimepickerModule } from 'mat-timepicker';
-import { NgxMaterialTimepickerModule } from 'ngx-material-timepicker';
 import { NgxDatatableModule } from '@swimlane/ngx-datatable';
 import { NgMultiselectDropdown3Module } from 'ng-multiselect-dropdown3';
 import { SelectDropDownModule } from 'ngx-select-dropdown';
 import { EditTaskComponent } from './edit-task/edit-task.component';
 import { ExportPdfComponent } from './export-pdf/export-pdf.component';
-
 
 export const routes: Routes = [
   { path: '', component: DashboardComponent, pathMatch: 'full' }
@@ -40,7 +31,7 @@ export const routes: Routes = [
   imports: [
     CommonModule,
     FormsModule,
-    NgChartsModule,
+    ReactiveFormsModule,
     DirectivesModule,
     PipesModule,
     RouterModule.forChild(routes),
@@ -53,16 +44,13 @@ export const routes: Routes = [
     NgSelectModule,
     MatInputModule,
     MatDatepickerModule,
-    NgxMaterialTimepickerModule,
     MatNativeDateModule,
-    MatTimepickerModule,
-    ReactiveFormsModule,
     NgxDatatableModule,
     ToastrModule,
     NgMultiselectDropdown3Module,
     SelectDropDownModule,
   ],
-  providers:    [ 
+  providers: [
     {
       provide: GANTT_GLOBAL_CONFIG,
       useValue: {
@@ -75,19 +63,15 @@ export const routes: Routes = [
           yearQuarter: 'yyyy QQQ'
         },
       }
-    }, DashboardService , ],
+    },
+    DashboardService,
+  ],
   declarations: [
     DashboardComponent,
-    TodoComponent,
-    ChatComponent,
-    FeedComponent,
-    DatamapComponent,
-    DynamicChartComponent,
     ActionNeededComponent,
     AddTaskComponent,
     EditTaskComponent,
-    ExportPdfComponent
+    ExportPdfComponent,
   ]
 })
-
 export class DashboardModule { }

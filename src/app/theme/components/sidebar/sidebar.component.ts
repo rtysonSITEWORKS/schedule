@@ -13,7 +13,7 @@ import { SidebarService } from './sidebar.service';
 export class SidebarComponent implements OnInit {
   public sidebarItems:Array<any>;
   public menuHeight:number;
-  public isMenuCollapsed:boolean = false;
+  public isMenuCollapsed:boolean = true;
   public isMenuShouldCollapsed:boolean = false;
   public showHoverElem:boolean;
   public hoverElemHeight:number;

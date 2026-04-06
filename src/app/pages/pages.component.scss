@@ -13,17 +13,11 @@ body::before{
     z-index: -1;
 }
 
-.main-wrapper{ 
-    margin-left: $sidebar-width;
-    padding: 30px 40px 60px;
-    margin-top: $navbar-height;
+.main-wrapper{
+    margin: 0;
+    padding: 0;
     position: relative;
-    flex: 1;
-    // min-height: calc(100vh - 70px);
     overflow: hidden;
-    &.menu-collapsed{ 
-        margin-left: 50px;
-    }
 }
 
 .custom-input {

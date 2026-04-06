@@ -42,8 +42,10 @@ export class GanttViewCustom extends GanttView {
         this.viewType         = GanttViewType.day;
     }
 
-    startOf(date: GanttDate) { return date.startOfWeek({ weekStartsOn: 1 }); }
-    endOf(date: GanttDate)   { return date.endOfWeek({ weekStartsOn: 1 }); }
+    override startOf(date: GanttDate) { return date.startOfWeek({ weekStartsOn: 1 }); }
+    override endOf(date: GanttDate)   { return date.endOfWeek({ weekStartsOn: 1 }); }
+    override viewStartOf(date: GanttDate) { return date.startOfWeek({ weekStartsOn: 1 }); }
+    override viewEndOf(date: GanttDate)   { return date.endOfWeek({ weekStartsOn: 1 }); }
 
     getPrimaryWidth() { return this.getCellWidth() * 7; }
 
@@ -74,9 +76,9 @@ export class GanttViewCustom extends GanttView {
             return point;
         };
 
-        for (let i = 0; i < days.length; i += 10) {
-            const segCount      = Math.min(10, days.length - i);
-            const midpointIndex = Math.min(i + 5, days.length - 1);
+        for (let i = 0; i < days.length; i += 15) {
+            const segCount      = Math.min(15, days.length - i);
+            const midpointIndex = Math.min(i + Math.floor(segCount / 2), days.length - 1);
             const xCenter       = i * this.getCellWidth() + (segCount * this.getCellWidth()) / 2;
 
             // Check for a month boundary in this segment

@@ -37,24 +37,28 @@
           class="filename-input"
           [(ngModel)]="filename"
           placeholder="Project_Schedule_2025-01-01" />
-        <span class="pdf-suffix">.pdf</span>
+          <span class="pdf-suffix">.pdf</span>
+        </div>
       </div>
+
+      <div class="export-legend">
+        <span class="legend-item active">● Active</span>
+        <span class="legend-item on-hold">● On Hold</span>
+        <span class="legend-item action-needed">● Action Needed</span>
+      </div>
+
     </div>
 
-    <div class="export-legend">
-      <span class="legend-item active">● Active</span>
-      <span class="legend-item on-hold">● On Hold</span>
-      <span class="legend-item action-needed">● Action Needed</span>
+    <div class="export-footer">
+      <button class="btn-cancel" (click)="cancel()" [disabled]="exporting">Cancel</button>
+      <button class="btn-export" (click)="export()" [disabled]="exporting || !filename">
+        @if (!exporting) {
+          <span>⬇ Export PDF</span>
+        }
+        @if (exporting) {
+          <span>Generating…</span>
+        }
+      </button>
     </div>
 
   </div>
-
-  <div class="export-footer">
-    <button class="btn-cancel" (click)="cancel()" [disabled]="exporting">Cancel</button>
-    <button class="btn-export" (click)="export()" [disabled]="exporting || !filename">
-      <span *ngIf="!exporting">⬇ Export PDF</span>
-      <span *ngIf="exporting">Generating…</span>
-    </button>
-  </div>
-
-</div>

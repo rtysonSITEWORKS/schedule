@@ -14,7 +14,7 @@ import { AppState } from "../../../app.state";
 export class MenuComponent implements OnInit {
     public menuItems:Array<any>;
     public menuHeight:number;
-    public isMenuCollapsed:boolean = false;
+    public isMenuCollapsed:boolean = true;
     public isMenuShouldCollapsed:boolean = false;
     public showHoverElem:boolean;
     public hoverElemHeight:number;

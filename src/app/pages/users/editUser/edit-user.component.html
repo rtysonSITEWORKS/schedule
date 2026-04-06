@@ -1,0 +1,21 @@
+<div class="edit-dialog">
+  <div class="dialog-header">
+    <span>Edit Foreman / Superintendent</span>
+  </div>
+  <div class="dialog-body">
+    <div class="field-row">
+      <label>First Name</label>
+      <input [(ngModel)]="firstName" class="form-input" placeholder="First name" [disabled]="saving">
+    </div>
+    <div class="field-row">
+      <label>Last Name</label>
+      <input [(ngModel)]="lastName" class="form-input" placeholder="Last name" [disabled]="saving">
+    </div>
+    <div class="dialog-actions">
+      <button class="btn-cancel" (click)="cancel()" [disabled]="saving">Cancel</button>
+      <button class="btn-submit" (click)="submit()" [disabled]="saving">
+        {{ saving ? 'Saving…' : 'Save Changes' }}
+      </button>
+    </div>
+  </div>
+</div>

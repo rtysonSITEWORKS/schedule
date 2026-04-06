@@ -2,12 +2,12 @@ import { Component, Inject, OnInit } from '@angular/core';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { format, differenceInCalendarDays, parse } from 'date-fns';
 
-// pdfmake — already in package.json as ^0.2.7
-import * as pdfMake  from 'pdfmake/build/pdfmake';
-import * as pdfFonts from 'pdfmake/build/vfs_fonts';
-(pdfMake as any).vfs = (pdfFonts as any).pdfMake
-  ? (pdfFonts as any).pdfMake.vfs
-  : (pdfFonts as any);
+// pdfmake — esbuild requires default import so the vfs property is mutable
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const pdfMake:  any = require('pdfmake/build/pdfmake');
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const pdfFonts: any = require('pdfmake/build/vfs_fonts');
+pdfMake.vfs = pdfFonts.pdfMake ? pdfFonts.pdfMake.vfs : pdfFonts;
 
 export interface ExportPdfData {
   items:          any[];

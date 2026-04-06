@@ -6,14 +6,12 @@ $icon-font-path: "../node_modules/bootstrap-sass/assets/fonts/bootstrap/";
 // $fa-font-path : "../node_modules/font-awesome/fonts";
 // @import "../node_modules/font-awesome/scss/font-awesome";
 @import "../node_modules/font-awesome/css/font-awesome.css";
-@import "../node_modules/dragula/dist/dragula.min.css";
 @import "../node_modules/ngx-toastr/toastr";
 @import "../node_modules/socicon/css/socicon.css";
 @import "../node_modules/pace/themes/pace-theme-flash.css";
-@import "../node_modules/awesome-bootstrap-checkbox/awesome-bootstrap-checkbox.css";
 @import "../node_modules/@swimlane/ngx-datatable/themes/bootstrap.css";
 @import "../node_modules/@swimlane/ngx-datatable/assets/icons.css";
-@import "~@ng-select/ng-select/themes/default.theme.css";
+@import "@ng-select/ng-select/themes/default.theme.css";
 @import "app/theme/styles/variables";
 @import "app/theme/styles/mixins";
 @import "app/theme/styles/bootstrap-override";
@@ -23,10 +21,10 @@ $icon-font-path: "../node_modules/bootstrap-sass/assets/fonts/bootstrap/";
 
 @include mat.core();
 
-$my-primary: mat.define-palette(mat.$blue-grey-palette, 500);
-$my-accent: mat.define-palette(mat.$pink-palette, A200, A100, A400);
+$my-primary: mat.m2-define-palette(mat.$m2-blue-grey-palette, 500);
+$my-accent: mat.m2-define-palette(mat.$m2-pink-palette, A200, A100, A400);
 
-$my-theme: mat.define-light-theme((
+$my-theme: mat.m2-define-light-theme((
  color: (
    primary: $my-primary,
    accent: $my-accent,

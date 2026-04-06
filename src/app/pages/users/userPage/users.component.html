@@ -1,63 +1,70 @@
-<div class="row">
-    <div class="col">
-        <div widget class="card">
-            <div class="card-header">
-                <span class="text-uppercase">Foreman/Superintendent List</span>    
-            </div>
-
-            <div class="card-body widget-body">    
-                <div class="button-container">
-                    <!-- Add the "+" button inside the container -->
-                    <button class="add-button" (click)="addItem()">+</button>
-                </div> 
-                <ngx-datatable
-                    #table
-                    class="bootstrap"
-                    [headerHeight]="50"
-                    [limit]="10"
-                    [columnMode]="'force'"
-                    [footerHeight]="50"
-                    [rowHeight]="'auto'"
-                    [rows]="rows"
-                    [selected]="selected"
-                    [selectionType]="selection"
-                    (activate)="onActivate($event)"
-                    (select)='onSelect($event)'>
-                    <ngx-datatable-column
-                        [width]="30"
-                        [sortable]="false"
-                        [canAutoResize]="false"
-                        [draggable]="true"
-                        [resizeable]="true"
-                        [headerCheckboxable]="false"
-                        [checkboxable]="false">
-                    </ngx-datatable-column>
-                    <ngx-datatable-column name="name">
-                        <ng-template ngx-datatable-header-template>
-                            <span>Name</span>
-                          </ng-template>
-                        <ng-template ngx-datatable-cell-template let-value="value">
-                            {{value}}
-                        </ng-template>
-                    </ngx-datatable-column>
-                    <ngx-datatable-column name="email">
-                        <ng-template ngx-datatable-header-template>
-                            <span>Email</span>
-                          </ng-template>
-                        <ng-template ngx-datatable-cell-template let-value="value">
-                            {{value}}
-                        </ng-template>
-                    </ngx-datatable-column>
-                    <ngx-datatable-column name="role">
-                        <ng-template ngx-datatable-header-template>
-                            <span>Role</span>
-                          </ng-template>
-                        <ng-template ngx-datatable-cell-template let-value="value">
-                            {{value}}
-                        </ng-template>
-                    </ngx-datatable-column>
-                </ngx-datatable>  
-            </div>
-        </div>
+<!-- Shared app toolbar -->
+<div class="app-toolbar">
+  <div class="tb-section tb-section-brand">
+    <img class="tb-logo" src="assets/img/logo/siteworks-full.png" alt="SiteWorks">
+  </div>
+  <div class="tb-sep"></div>
+  <div class="tb-section tb-section-nav">
+    <a class="tb-nav-link" routerLink="/pages/dashboard" routerLinkActive="tb-nav-link--active">
+      <i class="fa fa-calendar"></i> Schedule
+    </a>
+    <a class="tb-nav-link" routerLink="/pages/users" routerLinkActive="tb-nav-link--active">
+      <i class="fa fa-users"></i> Users
+    </a>
+    <a class="tb-nav-link" routerLink="/pages/projects" routerLinkActive="tb-nav-link--active">
+      <i class="fa fa-folder-open"></i> Projects
+    </a>
+  </div>
+  <div class="tb-sep"></div>
+  <div class="tb-section">
+    <span class="tb-page-title">Foreman / Superintendent List</span>
+  </div>
+  <div class="tb-sep"></div>
+  <!-- Search -->
+  <div class="tb-section">
+    <div class="tb-filter-group">
+      <span class="tb-filter-label">Search</span>
+      <input class="tb-search"
+             [(ngModel)]="searchTerm"
+             (ngModelChange)="onSearch()"
+             placeholder="First or last name…">
     </div>
+  </div>
+  <div class="tb-sep"></div>
+  <div class="tb-section">
+    <div class="tb-actions">
+      <button class="tb-btn tb-btn-accent" (click)="addItem()">+ Add Foreman</button>
+    </div>
+  </div>
+</div>
+
+<!-- Table body -->
+<div class="page-body">
+  <ngx-datatable
+    #table
+    class="bootstrap material"
+    [headerHeight]="44"
+    [footerHeight]="44"
+    [rowHeight]="48"
+    [limit]="20"
+    [columnMode]="'force'"
+    [rows]="rows"
+    [loadingIndicator]="loading"
+    [selected]="selected"
+    [selectionType]="selection"
+    (select)="onSelect($event)">
+
+    <ngx-datatable-column name="First Name" prop="firstname" [sortable]="true"></ngx-datatable-column>
+    <ngx-datatable-column name="Last Name"  prop="lastname"  [sortable]="true"></ngx-datatable-column>
+
+    <ngx-datatable-column name="" [sortable]="false" [maxWidth]="110" [resizeable]="false">
+      <ng-template ngx-datatable-cell-template let-row="row">
+        <div class="row-actions">
+          <button class="action-btn edit-btn" (click)="editRow(row)"   title="Edit">✎</button>
+          <button class="action-btn del-btn"  (click)="deleteRow(row)" title="Delete">✕</button>
+        </div>
+      </ng-template>
+    </ngx-datatable-column>
+
+  </ngx-datatable>
 </div>

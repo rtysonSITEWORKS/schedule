@@ -1,0 +1,96 @@
+<!-- Shared app toolbar -->
+<div class="app-toolbar">
+  <div class="tb-section tb-section-brand">
+    <img class="tb-logo" src="assets/img/logo/siteworks-full.png" alt="SiteWorks">
+  </div>
+  <div class="tb-sep"></div>
+  <div class="tb-section tb-section-nav">
+    <a class="tb-nav-link" routerLink="/pages/dashboard" routerLinkActive="tb-nav-link--active">
+      <i class="fa fa-calendar"></i> Schedule
+    </a>
+    <a class="tb-nav-link" routerLink="/pages/users" routerLinkActive="tb-nav-link--active">
+      <i class="fa fa-users"></i> Users
+    </a>
+    <a class="tb-nav-link" routerLink="/pages/projects" routerLinkActive="tb-nav-link--active">
+      <i class="fa fa-folder-open"></i> Projects
+    </a>
+  </div>
+  <div class="tb-sep"></div>
+  <!-- Status filter -->
+  <div class="tb-section">
+    <div class="tb-filter-group">
+      <span class="tb-filter-label">Status</span>
+      <ng-select class="tb-select"
+                 [items]="statusOptions"
+                 bindLabel="label"
+                 bindValue="value"
+                 [clearable]="false"
+                 [(ngModel)]="statusFilter"
+                 (change)="onStatusChange()">
+      </ng-select>
+    </div>
+  </div>
+  <div class="tb-sep"></div>
+  <!-- Search -->
+  <div class="tb-section">
+    <div class="tb-filter-group">
+      <span class="tb-filter-label">Search</span>
+      <input class="tb-search"
+             [(ngModel)]="searchTerm"
+             (ngModelChange)="onSearch()"
+             placeholder="Name, company, foreman…">
+    </div>
+  </div>
+  <div class="tb-sep"></div>
+  <div class="tb-section">
+    <div class="tb-actions">
+      <button class="tb-btn tb-btn-accent" (click)="addProject()">+ Add Project</button>
+    </div>
+  </div>
+</div>
+
+<!-- Table body -->
+<div class="page-body">
+  <ngx-datatable
+    #table
+    class="bootstrap material"
+    [headerHeight]="44"
+    [footerHeight]="44"
+    [rowHeight]="48"
+    [limit]="25"
+    [columnMode]="'force'"
+    [rows]="rows"
+    [loadingIndicator]="loading">
+
+    <ngx-datatable-column name="Project Name" prop="name"    [sortable]="true"></ngx-datatable-column>
+    <ngx-datatable-column name="Foreman"      prop="foreman" [sortable]="true"></ngx-datatable-column>
+
+    <ngx-datatable-column name="Start" prop="start" [sortable]="true">
+      <ng-template ngx-datatable-cell-template let-value="value">
+        {{ formatDate(value) }}
+      </ng-template>
+    </ngx-datatable-column>
+
+    <ngx-datatable-column name="End" prop="end" [sortable]="true">
+      <ng-template ngx-datatable-cell-template let-value="value">
+        {{ formatDate(value) }}
+      </ng-template>
+    </ngx-datatable-column>
+
+    <ngx-datatable-column name="Status" prop="status" [sortable]="true" [maxWidth]="130">
+      <ng-template ngx-datatable-cell-template let-value="value">
+        <span class="status-badge" [class]="'status-' + value">{{ value | titlecase }}</span>
+      </ng-template>
+    </ngx-datatable-column>
+
+    <ngx-datatable-column name="" [sortable]="false" [maxWidth]="110" [resizeable]="false">
+      <ng-template ngx-datatable-cell-template let-row="row">
+        <div class="row-actions">
+          <button class="action-btn edit-btn" (click)="editRow(row)"   title="Edit">✎</button>
+          <button class="action-btn del-btn"  (click)="deleteRow(row)" title="Delete">✕</button>
+        </div>
+      </ng-template>
+    </ngx-datatable-column>
+
+  </ngx-datatable>
+</div>

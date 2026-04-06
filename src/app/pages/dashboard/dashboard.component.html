@@ -55,58 +55,103 @@
   📅 {{ dragDateLabel }}
 </div>
 
-<!-- ── Nav toolbar (fixed inside top navbar) ─────────────────────────────── -->
-<div class="dash-nav-actions">
-  <button (click)="expandAllGroups()" class="nav-toolbar-btn">
-    {{ expanded ? 'Collapse' : 'Expand' }}
-  </button>
-  <button (click)="addTask()" class="nav-toolbar-btn">Add Task</button>
-  <button (click)="generatePDF()" class="nav-toolbar-btn">Download as PDF</button>
-  <div class="nav-zoom-controls">
-    <span class="nav-zoom-label">Zoom</span>
-    <button class="nav-zoom-btn" (click)="zoomOut()" title="Zoom out">−</button>
-    <span class="nav-zoom-value">{{ zoomCellWidth }}px</span>
-    <button class="nav-zoom-btn" (click)="zoomIn()" title="Zoom in">+</button>
-    <button class="nav-zoom-btn nav-zoom-reset" (click)="zoomReset()" title="Reset zoom">↺</button>
-  </div>
-</div>
 
-<div class="container-fluid" style="height: 100vh; width: 100vw;"
+<div class="container-fluid" style="height: 100vh; width: 100vw; padding: 0;"
      [style.--zoom-font]="barFontSize"
      [style.--zoom-group-height]="ganttGroupHeight"
      (contextmenu)="onGanttContextMenu($event)"
      (mousemove)="onGanttMouseMove($event)">
-  <!-- ── Toolbar ── -->
-  <div class="row toolbar-row">
-    <div class="col-md-4 col-12">
-      <h6>Project Filter</h6>
-      <ng-select [items]="statusFilters"
-                 bindLabel="label"
-                 bindValue="value"
-                 [multiple]="false"
-                 (change)="onFilterChangeStatus()"
-                 searchPlaceholder="Select Status"
-                 [(ngModel)]="statusFilter">
-      </ng-select>
+  <!-- ── Unified Toolbar ── -->
+  <div #toolbar class="app-toolbar">
+
+    <!-- Brand -->
+    <div class="tb-section tb-section-brand">
+      <img class="tb-logo" src="assets/img/logo/siteworks-full.png" alt="SiteWorks">
     </div>
-    <div class="col-md-4 col-12">
-      <h6>Foreman Filter</h6>
-      <ng-select [items]="foremanFilters"
-                 bindLabel="label"
-                 bindValue="value"
-                 [multiple]="false"
-                 (change)="onFilterChangeStatus()"
-                 searchPlaceholder="Select Foreman"
-                 [(ngModel)]="foremanFilter">
-      </ng-select>
+
+    <div class="tb-sep"></div>
+
+    <!-- Navigation -->
+    <div class="tb-section tb-section-nav">
+      <a class="tb-nav-link" routerLink="/pages/dashboard" routerLinkActive="tb-nav-link--active">
+        <i class="fa fa-calendar"></i> Schedule
+      </a>
+      <a class="tb-nav-link" routerLink="/pages/users" routerLinkActive="tb-nav-link--active">
+        <i class="fa fa-users"></i> Users
+      </a>
+      <a class="tb-nav-link" routerLink="/pages/projects" routerLinkActive="tb-nav-link--active">
+        <i class="fa fa-folder-open"></i> Projects
+      </a>
     </div>
+
+    <div class="tb-sep"></div>
+
+    <!-- Status filter -->
+    <div class="tb-section">
+      <div class="tb-filter-group">
+        <span class="tb-filter-label">Status</span>
+        <ng-select class="tb-select"
+                   [items]="statusFilters"
+                   bindLabel="label"
+                   bindValue="value"
+                   [multiple]="false"
+                   [clearable]="true"
+                   (change)="onFilterChangeStatus()"
+                   placeholder="All Statuses"
+                   [(ngModel)]="statusFilter">
+        </ng-select>
+      </div>
+    </div>
+
+    <div class="tb-sep"></div>
+
+    <!-- Foreman filter -->
+    <div class="tb-section">
+      <div class="tb-filter-group">
+        <span class="tb-filter-label">Foreman</span>
+        <ng-select class="tb-select"
+                   [items]="foremanFilters"
+                   bindLabel="label"
+                   bindValue="value"
+                   [multiple]="false"
+                   [clearable]="true"
+                   (change)="onFilterChangeStatus()"
+                   placeholder="All Foremen"
+                   [(ngModel)]="foremanFilter">
+        </ng-select>
+      </div>
+    </div>
+
+    <div class="tb-sep"></div>
+
+    <!-- Actions -->
+    <div class="tb-section">
+      <div class="tb-actions">
+        <button class="tb-btn" (click)="expandAllGroups()">{{ expanded ? 'Collapse All' : 'Expand All' }}</button>
+        <button class="tb-btn tb-btn-accent" (click)="addTask()">+ Add Task</button>
+        <button class="tb-btn" (click)="generatePDF()">↓ Export PDF</button>
+      </div>
+    </div>
+
+    <div class="tb-sep"></div>
+
+    <!-- Zoom -->
+    <div class="tb-section tb-section-zoom">
+      <div class="tb-zoom">
+        <button class="tb-zoom-btn" (click)="zoomOut()" title="Zoom out">−</button>
+        <span class="tb-zoom-val">{{ zoomCellWidth }}px</span>
+        <button class="tb-zoom-btn" (click)="zoomIn()" title="Zoom in">+</button>
+        <button class="tb-zoom-btn tb-zoom-reset" (click)="zoomReset()" title="Reset zoom">↺</button>
+      </div>
+    </div>
+
   </div>
 
   <!-- ── Gantt Frame ── -->
-  <div class="gantt-frame mt-2" style="height: calc(100vh - 120px);">
+  <div class="gantt-frame" [style.height.px]="ganttFrameHeight">
 
     <div id="gantt-container" style="height: 100%; overflow: hidden;">
-      <div style="height: 100%; overflow: auto;">
+      <div style="height: 100%; overflow: auto;" tabindex="0" (keydown)="onGanttKeydown($event)">
         <ngx-gantt
           *ngIf="showGantt"
           #gantt
