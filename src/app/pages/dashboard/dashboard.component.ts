@@ -20,6 +20,7 @@ import { AddTaskComponent } from "./add-task/add-task.component";
 import { EditTaskComponent } from "./edit-task/edit-task.component";
 import { format, parse } from "date-fns";
 import { ExportPdfComponent } from './export-pdf/export-pdf.component';
+import { ManageTasksComponent } from './manage-tasks/manage-tasks.component';
 
 interface CustomGanttItem extends GanttItem {
   foreman?: string;
@@ -238,6 +239,10 @@ export class DashboardComponent implements AfterViewInit {
     return new Date(dateString.replace(' GMT', ''));
   }
 
+  manageTasks(): void {
+    this.dialog.open(ManageTasksComponent, { width: '520px' });
+  }
+
   generatePDF(): void {
     this.dialog.open(ExportPdfComponent, {
       width: '760px',
@@ -361,7 +366,7 @@ export class DashboardComponent implements AfterViewInit {
       height: '300px',
       data: { defaultStart: date, defaultEnd: date }
     });
-    dialogRef.afterClosed().subscribe(() => this.loadChart());
+    dialogRef.afterClosed().subscribe((result: any) => { if (result) this.loadChart(); });
   }
 
   // ── Drag feedback ──────────────────────────────────────────────────────────
@@ -451,7 +456,20 @@ export class DashboardComponent implements AfterViewInit {
       height: '300px',
       data: { foundItem }
     });
-    dialogRef.afterClosed().subscribe(() => this.loadChart());
+    dialogRef.afterClosed().subscribe((result: any) => {
+      if (!result) return;
+      const newStart = format(new Date(result.start), 'dd MMM yyyy HH:mm:ss');
+      const newEnd   = format(new Date(result.end),   'dd MMM yyyy HH:mm:ss');
+      const patch = (arr: any[]) =>
+        arr.map(i => i.id === String(result.id)
+          ? { ...i, start: newStart, end: newEnd, foreman: result.foreman }
+          : i);
+      this.items         = patch(this.items)         as any[];
+      this.originalItems = patch(this.originalItems) as any[];
+      if (result.foreman != null) {
+        this.nameDictionary = { ...this.nameDictionary, [String(result.id)]: result.foreman };
+      }
+    });
   }
 
   onHoldButtonClick(menuItem: CustomGanttItem): void {
@@ -513,8 +531,10 @@ export class DashboardComponent implements AfterViewInit {
     const foundItem = this.items.find(itm => itm.id === item.id);
     if (!foundItem) return;
 
+    this.items         = this.items.filter(i => i.id !== foundItem.id);
+    this.originalItems = this.originalItems.filter(i => i.id !== foundItem.id);
+
     this.ds.convertToDeleted(parseInt(foundItem.id)).subscribe({
-      next:  () => this.loadChart(),
       error: err => console.error('Error deleting task:', err)
     });
   }
@@ -526,20 +546,33 @@ export class DashboardComponent implements AfterViewInit {
   dragEnded(event: GanttDragEvent): void {
     this.isDragging    = false;
     this.dragDateLabel = '';
+
     const adjustedItem = {
       ...event.item,
       start: new Date((event.item.start as number) * 1000).toLocaleString(),
       end:   new Date((event.item.end   as number) * 1000).toLocaleString()
     };
+
+    // Pre-compute the display strings for the moved item
+    const newStart = format(new Date((event.item.start as number) * 1000), 'dd MMM yyyy HH:mm:ss');
+    const newEnd   = format(new Date((event.item.end   as number) * 1000), 'dd MMM yyyy HH:mm:ss');
+
     this.ds.updateTask(adjustedItem).subscribe({
-      next:  () => this.loadChart(),
+      next: () => {
+        // The gantt already reflects the new dates internally after drag —
+        // reassigning this.items would trigger ngOnChanges and reset scroll/collapse.
+        // Only keep originalItems in sync so filter operations stay accurate.
+        this.originalItems = this.originalItems.map(i =>
+          i.id === event.item.id ? { ...i, start: newStart, end: newEnd } : i
+        ) as any[];
+      },
       error: () => this.loadChart()
     });
   }
 
   addTask(): void {
     const dialogRef = this.dialog.open(AddTaskComponent, { width: '1500px', height: '300px' });
-    dialogRef.afterClosed().subscribe(() => this.loadChart());
+    dialogRef.afterClosed().subscribe((result: any) => { if (result) this.loadChart(); });
   }
 
   expandAllGroups(): void {

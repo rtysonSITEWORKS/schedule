@@ -1,0 +1,115 @@
+.create-dialog { font-family: 'Inter', sans-serif; }
+
+.dialog-header {
+  background: #2c3e50;
+  color: #fff;
+  padding: 16px 20px;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.dialog-body { padding: 20px; }
+
+.field-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  label {
+    display: block;
+    font-size: 12px;
+    font-weight: 600;
+    color: #555;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    white-space: nowrap;
+  }
+}
+
+.form-input {
+  width: 100%;
+  padding: 9px 12px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  font-size: 14px;
+  box-sizing: border-box;
+  background: #fff;
+  &:focus   { outline: none; border-color: #2980b9; }
+  &:disabled { background: #f0f0f0; }
+}
+
+.dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.btn-cancel {
+  padding: 8px 18px;
+  border: 1px solid #aaa;
+  border-radius: 5px;
+  background: #fff;
+  color: #555;
+  cursor: pointer;
+  font-size: 13px;
+  &:hover { background: #f5f5f5; }
+}
+
+.btn-submit {
+  padding: 8px 18px;
+  border: none;
+  border-radius: 5px;
+  background: #2980b9;
+  color: #fff;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  &:hover:not(:disabled) { background: #1a6fa0; }
+  &:disabled { opacity: 0.5; cursor: default; }
+}
+
+// ── Task list ────────────────────────────────────────────────────────────────
+.task-list-container {
+  max-height: 360px;
+  overflow-y: auto;
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  background: #fafafa;
+}
+
+.task-list-row {
+  display: flex;
+  align-items: center;
+  padding: 8px 12px;
+  border-bottom: 1px solid #eee;
+  font-size: 13px;
+  font-family: 'Inter', sans-serif;
+
+  &:last-child { border-bottom: none; }
+  &:hover { background: #f0f4fb; }
+}
+
+.task-list-name {
+  flex: 1;
+  color: #333;
+}
+
+.task-list-type {
+  font-size: 11px;
+  color: #888;
+  margin-right: 10px;
+  background: #eee;
+  padding: 2px 7px;
+  border-radius: 10px;
+}
+
+.task-list-delete {
+  border: none;
+  background: none;
+  color: #c0392b;
+  cursor: pointer;
+  font-size: 14px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  line-height: 1;
+  &:hover { background: #fdecea; }
+}

@@ -22,6 +22,7 @@ import { NgMultiselectDropdown3Module } from 'ng-multiselect-dropdown3';
 import { SelectDropDownModule } from 'ngx-select-dropdown';
 import { EditTaskComponent } from './edit-task/edit-task.component';
 import { ExportPdfComponent } from './export-pdf/export-pdf.component';
+import { ManageTasksComponent } from './manage-tasks/manage-tasks.component';
 
 export const routes: Routes = [
   { path: '', component: DashboardComponent, pathMatch: 'full' }
@@ -72,6 +73,7 @@ export const routes: Routes = [
     AddTaskComponent,
     EditTaskComponent,
     ExportPdfComponent,
+    ManageTasksComponent,
   ]
 })
 export class DashboardModule { }

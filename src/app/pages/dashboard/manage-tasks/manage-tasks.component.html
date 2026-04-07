@@ -1,0 +1,63 @@
+<div class="create-dialog" style="width:480px">
+
+  <div class="dialog-header">
+    <span>Manage Task Templates</span>
+  </div>
+
+  <div class="dialog-body">
+
+    <!-- Add new task -->
+    <div class="field-row" style="margin-bottom:16px">
+      <label>New Task</label>
+      <div style="display:flex;gap:8px;flex:1">
+        <input class="form-input"
+               [(ngModel)]="newTaskName"
+               placeholder="e.g. Underground Utilities"
+               (keydown.enter)="add()"
+               [disabled]="saving"
+               style="flex:1" />
+        <button class="btn-submit"
+                (click)="add()"
+                [disabled]="saving || !newTaskName.trim()"
+                style="white-space:nowrap">
+          {{ saving ? 'Adding…' : '+ Add' }}
+        </button>
+      </div>
+    </div>
+
+    <!-- Search -->
+    <div class="field-row" style="margin-bottom:10px">
+      <label>Search</label>
+      <input class="form-input"
+             [(ngModel)]="search"
+             placeholder="Filter tasks…"
+             style="flex:1" />
+    </div>
+
+    <!-- Task list -->
+    <div class="task-list-container">
+      @if (loading) {
+        <p style="color:#888;font-size:13px;text-align:center;padding:20px 0">Loading…</p>
+      }
+      @if (!loading && filteredTasks.length === 0) {
+        <p style="color:#888;font-size:13px;text-align:center;padding:20px 0">
+          {{ search ? 'No matches.' : 'No task templates yet.' }}
+        </p>
+      }
+      @for (task of filteredTasks; track task.id) {
+        <div class="task-list-row">
+          <span class="task-list-name">{{ task.task }}</span>
+          @if (task.type) {
+            <span class="task-list-type">{{ task.type }}</span>
+          }
+          <button class="task-list-delete" (click)="delete(task)" title="Remove">✕</button>
+        </div>
+      }
+    </div>
+
+    <div class="dialog-actions" style="margin-top:16px">
+      <button class="btn-cancel" (click)="close()">Done</button>
+    </div>
+
+  </div>
+</div>

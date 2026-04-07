@@ -1,4 +1,3 @@
-<!-- Shared app toolbar -->
 <div class="app-toolbar">
   <div class="tb-section tb-section-brand">
     <img class="tb-logo" src="assets/img/logo/siteworks-full.png" alt="SiteWorks">
@@ -20,28 +19,39 @@
   </div>
   <div class="tb-sep"></div>
   <div class="tb-section">
-    <span class="tb-page-title">Foreman / Superintendent List</span>
+    <span class="tb-page-title">Task Templates</span>
   </div>
   <div class="tb-sep"></div>
-  <!-- Search -->
   <div class="tb-section">
     <div class="tb-filter-group">
       <span class="tb-filter-label">Search</span>
       <input class="tb-search"
              [(ngModel)]="searchTerm"
              (ngModelChange)="onSearch()"
-             placeholder="First or last name…">
+             placeholder="Filter tasks…">
     </div>
   </div>
   <div class="tb-sep"></div>
   <div class="tb-section">
-    <div class="tb-actions">
-      <button class="tb-btn tb-btn-accent" (click)="addItem()">+ Add Foreman</button>
+    <div class="tb-filter-group">
+      <span class="tb-filter-label">New</span>
+      <input class="tb-search"
+             [(ngModel)]="newTaskName"
+             placeholder="Task name…"
+             (keydown.enter)="add()"
+             [disabled]="saving"
+             style="width:200px">
+    </div>
+    <div class="tb-actions" style="margin-left:8px">
+      <button class="tb-btn tb-btn-accent"
+              (click)="add()"
+              [disabled]="saving || !newTaskName.trim()">
+        {{ saving ? 'Adding…' : '+ Add' }}
+      </button>
     </div>
   </div>
 </div>
 
-<!-- Table body -->
 <div class="page-body">
   <ngx-datatable
     #table
@@ -49,22 +59,23 @@
     [headerHeight]="44"
     [footerHeight]="44"
     [rowHeight]="48"
-    [limit]="20"
+    [limit]="25"
     [columnMode]="'force'"
     [rows]="rows"
-    [loadingIndicator]="loading"
-    [selected]="selected"
-    [selectionType]="selection"
-    (select)="onSelect($event)">
+    [loadingIndicator]="loading">
 
-    <ngx-datatable-column name="First Name" prop="firstname" [sortable]="true"></ngx-datatable-column>
-    <ngx-datatable-column name="Last Name"  prop="lastname"  [sortable]="true"></ngx-datatable-column>
+    <ngx-datatable-column name="Task Name" prop="task" [sortable]="true"></ngx-datatable-column>
 
-    <ngx-datatable-column name="" [sortable]="false" [maxWidth]="110" [resizeable]="false">
+    <ngx-datatable-column name="Category" prop="type" [sortable]="true" [maxWidth]="200">
+      <ng-template ngx-datatable-cell-template let-value="value">
+        {{ value || '—' }}
+      </ng-template>
+    </ngx-datatable-column>
+
+    <ngx-datatable-column name="" [sortable]="false" [maxWidth]="80" [resizeable]="false">
       <ng-template ngx-datatable-cell-template let-row="row">
         <div class="row-actions">
-          <button class="action-btn edit-btn" (click)="editRow(row)"   title="Edit">✎</button>
-          <button class="action-btn del-btn"  (click)="deleteRow(row)" title="Delete">✕</button>
+          <button class="action-btn del-btn" (click)="deleteRow(row)" title="Delete">✕</button>
         </div>
       </ng-template>
     </ngx-datatable-column>

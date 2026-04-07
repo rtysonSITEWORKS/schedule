@@ -62,7 +62,7 @@ export class EditTaskComponent implements OnInit {
     this.ds.editTask(task).subscribe({
       next: () => {
         this.toastr.success('Task updated!', 'Success');
-        this.dialogRef.close(true);
+        this.dialogRef.close(task);
       },
       error: () => {
         this.toastr.error('Failed to update task.', 'Error');

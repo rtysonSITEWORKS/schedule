@@ -259,8 +259,23 @@ export class DataService {
     return this.foremansCache$;
   }
 
+  private taskListCache$: Observable<any[]> | null = null;
+
   getTaskList(): Observable<any[]> {
-    return of(this.types);
+    if (!this.taskListCache$) {
+      this.taskListCache$ = this.http.get<any[]>(`${this.route}getTaskList`).pipe(shareReplay(1));
+    }
+    return this.taskListCache$;
+  }
+
+  createTaskType(task: string): Observable<any> {
+    this.taskListCache$ = null;
+    return this.http.post<any>(`${this.route}createTaskList`, { task });
+  }
+
+  deleteTaskType(id: number): Observable<any> {
+    this.taskListCache$ = null;
+    return this.http.delete<any>(`${this.route}taskList/${id}`);
   }
 
   convertToDeleted(projectId: number): Observable<null> {

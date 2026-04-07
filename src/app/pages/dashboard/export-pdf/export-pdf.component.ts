@@ -324,80 +324,43 @@ export class ExportPdfComponent implements OnInit {
     });
     const groups = this.data.groups.filter(g => this.selectedProjectIds.includes(g.id));
 
-    // ── Task table ──────────────────────────────────────────────────────────
-    const COL_WIDTHS = ['*', 110, 78, 78, 50, 88];
-
-    const headerRow = ['Task / Activity', 'Foreman', 'Start Date', 'End Date', 'Days', 'Status']
-      .map(t => ({
-        text: t, bold: true, fontSize: 9,
-        color: '#ffffff', fillColor: '#1e3a5f',
-        margin: [4, 6, 4, 6]
-      }));
-
-    const tableBody: any[][] = [headerRow];
+    const tableBody: any[][] = [];
 
     const activeGroups = groups.filter(g =>
       items.some(i => i.group_id === g.id)
     );
 
     activeGroups.forEach(group => {
+      // Project header
       tableBody.push([{
         text:      group.title,
-        colSpan:   6,
         bold:      true,
         fontSize:  10,
         color:     '#ffffff',
         fillColor: '#37474f',
-        margin:    [8, 6, 6, 6]
-      }, '', '', '', '', '']);
+        margin:    [8, 6, 6, 6],
+        border:    [false, false, false, false]
+      }]);
 
-      const groupItems = items.filter(i => i.group_id === group.id && Number(i.group_id) !== -1);
-
-      groupItems.forEach((item, idx) => {
-          const start    = this.parseItemDate(item.start);
-          const end      = this.parseItemDate(item.end);
-          const days     = start && end ? String(differenceInCalendarDays(end, start)) : '—';
-          const startStr = start ? format(start, 'MM/dd/yyyy') : '—';
-          const endStr   = end   ? format(end,   'MM/dd/yyyy') : '—';
-          const fill     = idx % 2 === 0 ? '#f4f7fb' : '#ffffff';
-
-          tableBody.push([
-            { text: this.cleanTitle(item),          fontSize: 9, margin: [4,4,4,4], fillColor: fill },
-            { text: nameDictionary[item.id] || '—', fontSize: 9, margin: [4,4,4,4], fillColor: fill },
-            { text: startStr,                        fontSize: 9, margin: [4,4,4,4], fillColor: fill },
-            { text: endStr,                          fontSize: 9, margin: [4,4,4,4], fillColor: fill },
-            { text: days, alignment: 'center',       fontSize: 9, margin: [4,4,4,4], fillColor: fill },
-            {
-              text:      this.statusLabel(item),
-              bold:      true,
-              fontSize:  9,
-              color:     this.statusColor(item),
-              margin:    [4,4,4,4],
-              fillColor: fill
-            }
-          ]);
-        });
-
-      // ── Mini Gantt chart row ─────────────────────────────────────────────
+      // Gantt chart
+      const groupItems = items.filter(i => i.group_id === group.id);
       const gantt = this.buildGanttSvg(groupItems);
       if (gantt) {
         tableBody.push([{
-          colSpan: 6,
           stack: [
-            { text: 'TIMELINE', fontSize: 6.5, bold: true, color: '#90a4ae', margin: [4, 4, 0, 2] },
             { svg: gantt.svg, fit: [710, gantt.height], alignment: 'center' }
           ],
           border: [false, false, false, false],
-          margin: [2, 0, 2, 2]
-        }, '', '', '', '', '']);
+          margin: [0, 0, 0, 0]
+        }]);
       }
 
-      // Subtle spacer between projects
+      // Spacer between projects
       tableBody.push([{
-        text: '', colSpan: 6,
+        text:   '',
         border: [false, false, false, false],
-        margin: [0, 4, 0, 4]
-      }, '', '', '', '', '']);
+        margin: [0, 6, 0, 6]
+      }]);
     });
 
     // ── Document definition ─────────────────────────────────────────────────
@@ -425,10 +388,9 @@ export class ExportPdfComponent implements OnInit {
         coverHeader,
         {
           table: {
-            headerRows:    1,
-            widths:        COL_WIDTHS,
+            widths:        ['*'],
             body:          tableBody,
-            dontBreakRows: false
+            dontBreakRows: true
           },
           layout: {
             hLineWidth: (_i: number) => 0.4,

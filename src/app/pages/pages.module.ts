@@ -17,6 +17,7 @@ import { UsersComponent } from './users/userPage/users.component';
 import { NgxDatatableModule } from '@swimlane/ngx-datatable';
 import { CreateUserComponent } from './users/createUser/create-user/create-user.component';
 import { ProjectsComponent } from './projects/projects.component';
+import { TasksComponent } from './tasks/tasks.component';
 import { EditUserComponent } from './users/editUser/edit-user.component';
 import { EditProjectComponent } from './projects/editProject/edit-project.component';
 import { CreateProjectComponent } from './projects/createProject/create-project.component';
@@ -55,6 +56,7 @@ import { MatDialogModule } from '@angular/material/dialog';
     CreateUserComponent,
     EditUserComponent,
     ProjectsComponent,
+    TasksComponent,
     EditProjectComponent,
     CreateProjectComponent,
     ConfirmDialogComponent,
