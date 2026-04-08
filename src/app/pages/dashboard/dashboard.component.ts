@@ -1,4 +1,4 @@
-import { Component, ViewChild, ViewEncapsulation, HostBinding, ElementRef, AfterViewInit, HostListener } from "@angular/core";
+import { Component, ViewChild, ViewEncapsulation, HostBinding, ElementRef, AfterViewInit, HostListener, ChangeDetectorRef } from "@angular/core";
 import {
   GanttBarClickEvent,
   GanttDate,
@@ -126,7 +126,7 @@ export class DashboardComponent implements AfterViewInit {
 
   private nameDictionary: { [key: string]: string } = {};
 
-  constructor(private ds: DataService, public dialog: MatDialog) {}
+  constructor(private ds: DataService, public dialog: MatDialog, private cdr: ChangeDetectorRef) {}
 
   ngAfterViewInit(): void {
     this.updateGanttHeight();
@@ -148,7 +148,15 @@ export class DashboardComponent implements AfterViewInit {
     this.loadChart();
   }
 
-  loadChart(): void {
+  loadChart(preserveScroll = false): void {
+    // Snapshot scroll position before tearing down the gantt
+    const savedLeft = preserveScroll
+      ? (document.querySelector<HTMLElement>('.gantt-main-container')?.scrollLeft ?? 0)
+      : 0;
+    const savedTop = preserveScroll
+      ? (document.querySelector<HTMLElement>('.gantt-scroll-container')?.scrollTop ?? 0)
+      : 0;
+
     this.ds.getDict().subscribe((data: any) => {
       this.nameDictionary = data;
       this.ds.getAllItems().subscribe((data: any) => {
@@ -176,7 +184,14 @@ export class DashboardComponent implements AfterViewInit {
           this.showGantt = true;
           setTimeout(() => {
             this.addWeekendShading();
-            this.ganttComponent?.scrollToToday();
+            if (preserveScroll) {
+              const hS = document.querySelector<HTMLElement>('.gantt-main-container');
+              const vS = document.querySelector<HTMLElement>('.gantt-scroll-container');
+              if (hS) hS.scrollLeft = savedLeft;
+              if (vS) vS.scrollTop  = savedTop;
+            } else {
+              this.ganttComponent?.scrollToToday();
+            }
           }, 300);
         }, 30);
       });
@@ -366,7 +381,7 @@ export class DashboardComponent implements AfterViewInit {
       height: '300px',
       data: { defaultStart: date, defaultEnd: date }
     });
-    dialogRef.afterClosed().subscribe((result: any) => { if (result) this.loadChart(); });
+    dialogRef.afterClosed().subscribe((result: any) => { if (result) this.loadChart(true); });
   }
 
   // ── Drag feedback ──────────────────────────────────────────────────────────
@@ -417,7 +432,7 @@ export class DashboardComponent implements AfterViewInit {
       foundItem.actionText = null;
     }
     foundItem.color = null;
-    this.items = [...this.items];
+    this.cdr.detectChanges();
 
     this.ds.convertToActive(parseInt(foundItem.id)).subscribe({
       error: err => console.error('Error updating project status:', err)
@@ -437,7 +452,7 @@ export class DashboardComponent implements AfterViewInit {
       foundItem.color      = '#E1CA00';
       foundItem.title      = reasonString + foundItem.title;
       foundItem.actionText = reasonString;
-      this.items = [...this.items];
+      this.cdr.detectChanges();
 
       this.ds.convertToActionNeeded(parseInt(foundItem.id), reasonString).subscribe({
         error: err => console.error('Error updating project status:', err)
@@ -483,7 +498,7 @@ export class DashboardComponent implements AfterViewInit {
       foundItem.actionText = null;
     }
     foundItem.color = '#FF0000';
-    this.items = [...this.items];
+    this.cdr.detectChanges();
 
     this.ds.convertToOnHold(parseInt(foundItem.id)).subscribe({
       error: err => console.error('Error updating project status:', err)
@@ -559,20 +574,25 @@ export class DashboardComponent implements AfterViewInit {
 
     this.ds.updateTask(adjustedItem).subscribe({
       next: () => {
-        // The gantt already reflects the new dates internally after drag —
-        // reassigning this.items would trigger ngOnChanges and reset scroll/collapse.
-        // Only keep originalItems in sync so filter operations stay accurate.
+        // Mutate the item in-place: same array reference keeps ngOnChanges
+        // from firing, but updated dates prevent CD re-renders from snapping
+        // the bar back to its old position.
+        const idx = this.items.findIndex(i => i.id === event.item.id);
+        if (idx >= 0) {
+          (this.items[idx] as any).start = newStart;
+          (this.items[idx] as any).end   = newEnd;
+        }
         this.originalItems = this.originalItems.map(i =>
           i.id === event.item.id ? { ...i, start: newStart, end: newEnd } : i
         ) as any[];
       },
-      error: () => this.loadChart()
+      error: () => this.loadChart(true)
     });
   }
 
   addTask(): void {
     const dialogRef = this.dialog.open(AddTaskComponent, { width: '1500px', height: '300px' });
-    dialogRef.afterClosed().subscribe((result: any) => { if (result) this.loadChart(); });
+    dialogRef.afterClosed().subscribe((result: any) => { if (result) this.loadChart(true); });
   }
 
   expandAllGroups(): void {
