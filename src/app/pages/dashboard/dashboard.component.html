@@ -130,8 +130,9 @@
     <!-- Actions -->
     <div class="tb-section">
       <div class="tb-actions">
-        <button class="tb-btn" (click)="expandAllGroups()">{{ expanded ? 'Collapse All' : 'Expand All' }}</button>
-<button class="tb-btn tb-btn-accent" (click)="addTask()">+ Add Task</button>
+        <button class="tb-btn" (click)="collapseAllGroups()" title="Collapse all projects">⊟ Collapse All</button>
+        <button class="tb-btn" (click)="expandAllGroups()" title="Expand all projects">⊞ Expand All</button>
+        <button class="tb-btn tb-btn-accent" (click)="addTask()">+ Add Task</button>
         <button class="tb-btn" (click)="generatePDF()">↓ Export PDF</button>
       </div>
     </div>
@@ -170,6 +171,7 @@
           (barClick)="barClick($event)"
           (dragStarted)="onDragStarted($event)"
           (dragEnded)="dragEnded($event)"
+          (expandChange)="onGroupExpandChange($event)"
         >
           <ngx-gantt-table>
             <ngx-gantt-column name="Active Projects" [width]="col1Width">

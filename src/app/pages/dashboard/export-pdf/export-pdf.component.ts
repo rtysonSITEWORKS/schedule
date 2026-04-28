@@ -126,7 +126,9 @@ export class ExportPdfComponent implements OnInit {
     if (totalDays <= 0) return null;
 
     const TW        = 710;
-    const LABEL_W   = 130;
+    const TASK_W    = 100;
+    const FOREMAN_W = 110;
+    const LABEL_W   = TASK_W + FOREMAN_W;   // 210 — combined left-side columns
     const RIGHT_PAD = 10;
     const BAR_W     = TW - LABEL_W - 2 - RIGHT_PAD;
     const MONTH_H   = 20;   // top row: month labels
@@ -156,14 +158,21 @@ export class ExportPdfComponent implements OnInit {
 
     let s = `<svg xmlns="http://www.w3.org/2000/svg" width="${TW}" height="${SVG_H}">`;
 
-    // Overall background + label column
+    // Overall background + label columns
     s += `<rect width="${TW}" height="${SVG_H}" fill="#f5f7fa"/>`;
-    s += `<rect x="0" y="${HDR_H}" width="${LABEL_W}" height="${SVG_H - HDR_H}" fill="#eceff4"/>`;
+    s += `<rect x="0" y="${HDR_H}" width="${TASK_W}" height="${SVG_H - HDR_H}" fill="#eceff4"/>`;
+    s += `<rect x="${TASK_W}" y="${HDR_H}" width="${FOREMAN_W}" height="${SVG_H - HDR_H}" fill="#e8ecf4"/>`;
 
     // ── Month header row (top) ────────────────────────────────────────────
     s += `<rect width="${TW}" height="${MONTH_H}" fill="#2c3e50"/>`;
-    // Light label column override so task names don't sit on dark header
+    // Light label column override so column headers don't sit on dark header
     s += `<rect x="0" y="0" width="${LABEL_W}" height="${HDR_H}" fill="#f0f2f5"/>`;
+    // Column header labels
+    s += `<text x="${(TASK_W / 2).toFixed(1)}" y="${HDR_H - 4}" text-anchor="middle" font-family="Helvetica" font-size="6" font-weight="bold" fill="#546e7a">Task</text>`;
+    s += `<text x="${(TASK_W + FOREMAN_W / 2).toFixed(1)}" y="${HDR_H - 4}" text-anchor="middle" font-family="Helvetica" font-size="6" font-weight="bold" fill="#546e7a">Foreman</text>`;
+    // Vertical dividers between label columns (full height)
+    s += `<line x1="${TASK_W}" y1="0" x2="${TASK_W}" y2="${SVG_H}" stroke="#c8d0dc" stroke-width="0.6"/>`;
+    s += `<line x1="${LABEL_W}" y1="0" x2="${LABEL_W}" y2="${SVG_H}" stroke="#c8d0dc" stroke-width="0.6"/>`;
     // Start the month cursor at the month containing rangeStart
     let cur = new Date(rangeStart.getFullYear(), rangeStart.getMonth(), 1);
     while (cur <= rangeEnd) {
@@ -214,8 +223,11 @@ export class ExportPdfComponent implements OnInit {
 
       s += `<rect x="${LABEL_W}" y="${rowY}" width="${BAR_W + 2}" height="${ROW_H}" fill="${rowBg}"/>`;
 
-      const lbl = label.length > 23 ? label.slice(0, 21) + '\u2026' : label;
+      const lbl = label;
       s += `<text x="4" y="${rowY + ROW_H - 5}" font-family="Helvetica" font-size="7.5" fill="#2c3e50">${esc(lbl)}</text>`;
+
+      const foremanRaw = this.data.nameDictionary[item.id] ?? '';
+      s += `<text x="${TASK_W + 4}" y="${rowY + ROW_H - 5}" font-family="Helvetica" font-size="7" fill="#37474f">${esc(foremanRaw)}</text>`;
 
       const x1    = Math.max(xFor(start!), LABEL_W);
       const x2    = Math.min(xFor(end!),   TW - 1);

@@ -49,7 +49,6 @@ export class DashboardComponent implements AfterViewInit {
 
   foremanFilters: any[] = [];
 
-  expanded  = true;
   showGantt = false; // stays false until data loads + column widths are calculated
 
   // Column widths — fixed at these values across all zoom levels
@@ -125,6 +124,9 @@ export class DashboardComponent implements AfterViewInit {
   }
 
   private nameDictionary: { [key: string]: string } = {};
+  // Track which groups the user has explicitly collapsed so we can restore
+  // them after drag (the gantt uses OnPush CD and needs explicit re-render).
+  private collapsedGroupIds = new Set<any>();
 
   constructor(private ds: DataService, public dialog: MatDialog, private cdr: ChangeDetectorRef) {}
 
@@ -192,6 +194,8 @@ export class DashboardComponent implements AfterViewInit {
             } else {
               this.ganttComponent?.scrollToToday();
             }
+            // Re-collapse any groups the user had collapsed before the reload
+            this.restoreCollapsedGroups();
           }, 300);
         }, 30);
       });
@@ -221,6 +225,7 @@ export class DashboardComponent implements AfterViewInit {
       setTimeout(() => {
         this.addWeekendShading();
         this.ganttComponent?.scrollToToday();
+        this.restoreCollapsedGroups();
       }, 300);
     }, 30);
   }
@@ -432,7 +437,7 @@ export class DashboardComponent implements AfterViewInit {
       foundItem.actionText = null;
     }
     foundItem.color = null;
-    this.cdr.detectChanges();
+    this.items = [...this.items]; // new reference forces gantt to recreate GanttItemInternal → bar re-reads color
 
     this.ds.convertToActive(parseInt(foundItem.id)).subscribe({
       error: err => console.error('Error updating project status:', err)
@@ -452,7 +457,7 @@ export class DashboardComponent implements AfterViewInit {
       foundItem.color      = '#E1CA00';
       foundItem.title      = reasonString + foundItem.title;
       foundItem.actionText = reasonString;
-      this.cdr.detectChanges();
+      this.items = [...this.items];
 
       this.ds.convertToActionNeeded(parseInt(foundItem.id), reasonString).subscribe({
         error: err => console.error('Error updating project status:', err)
@@ -475,15 +480,15 @@ export class DashboardComponent implements AfterViewInit {
       if (!result) return;
       const newStart = format(new Date(result.start), 'dd MMM yyyy HH:mm:ss');
       const newEnd   = format(new Date(result.end),   'dd MMM yyyy HH:mm:ss');
-      const patch = (arr: any[]) =>
-        arr.map(i => i.id === String(result.id)
-          ? { ...i, start: newStart, end: newEnd, foreman: result.foreman }
-          : i);
-      this.items         = patch(this.items)         as any[];
-      this.originalItems = patch(this.originalItems) as any[];
+      // Mutate in-place to avoid triggering ngOnChanges which resets scroll + expand state
+      const found = this.items.find(i => i.id === String(result.id)) as any;
+      if (found) { found.start = newStart; found.end = newEnd; if (result.foreman != null) found.foreman = result.foreman; }
+      const foundOrig = this.originalItems.find(i => i.id === String(result.id)) as any;
+      if (foundOrig) { foundOrig.start = newStart; foundOrig.end = newEnd; if (result.foreman != null) foundOrig.foreman = result.foreman; }
       if (result.foreman != null) {
         this.nameDictionary = { ...this.nameDictionary, [String(result.id)]: result.foreman };
       }
+      this.cdr.detectChanges();
     });
   }
 
@@ -498,7 +503,7 @@ export class DashboardComponent implements AfterViewInit {
       foundItem.actionText = null;
     }
     foundItem.color = '#FF0000';
-    this.cdr.detectChanges();
+    this.items = [...this.items];
 
     this.ds.convertToOnHold(parseInt(foundItem.id)).subscribe({
       error: err => console.error('Error updating project status:', err)
@@ -558,34 +563,66 @@ export class DashboardComponent implements AfterViewInit {
     return this.nameDictionary[itemId] ?? '';
   }
 
+  /** Called by (expandChange) on the gantt.
+   *  IMPORTANT: NgxGanttComponent.expandGroup emits expandChange() with NO argument,
+   *  so we cannot rely on the event payload. We re-read all group states from the
+   *  library's internal groups array to keep our Set accurate. */
+  onGroupExpandChange(_event: any): void {
+    const groups: any[] = (this.ganttComponent as any).groups ?? [];
+    this.collapsedGroupIds = new Set(
+      groups.filter((g: any) => g.expanded === false).map((g: any) => g.id)
+    );
+  }
+
+  /** Re-applies the user's collapse state to the gantt after any event that
+   *  may have reset it (drag end, chart reload, etc.).
+   *  Uses setExpand() + afterExpand() + cdr.detectChanges() because NgxGantt
+   *  uses OnPush change detection — calling setExpand alone is not enough. */
+  private restoreCollapsedGroups(): void {
+    if (this.collapsedGroupIds.size === 0) return;
+    const gantt   = this.ganttComponent as any;
+    const groups: any[] = gantt.groups ?? [];
+    // Build the list of groups to collapse before mutating (avoids Set-corruption mid-loop)
+    const toCollapse = groups.filter((g: any) =>
+      this.collapsedGroupIds.has(g.id) && g.expanded !== false
+    );
+    if (toCollapse.length === 0) return;
+    toCollapse.forEach((g: any) => g.setExpand(false));
+    // Rebuild virtual-scroll list + trigger OnPush re-render (same as NgxGanttComponent.expandGroup)
+    gantt.afterExpand?.();
+    gantt.cdr?.detectChanges?.();
+    // Resync the Set from actual gantt state now that we've applied changes
+    this.collapsedGroupIds = new Set(
+      groups.filter((g: any) => g.expanded === false).map((g: any) => g.id)
+    );
+  }
+
   dragEnded(event: GanttDragEvent): void {
     this.isDragging    = false;
     this.dragDateLabel = '';
 
+    const newStart = format(new Date((event.item.start as number) * 1000), 'dd MMM yyyy HH:mm:ss');
+    const newEnd   = format(new Date((event.item.end   as number) * 1000), 'dd MMM yyyy HH:mm:ss');
+
+    // Merge with original item so custom fields (actionText, color, title)
+    // are always present — the gantt event strips non-standard properties.
+    const originalItem = this.items.find(i => i.id === event.item.id) as any;
     const adjustedItem = {
+      ...originalItem,
       ...event.item,
       start: new Date((event.item.start as number) * 1000).toLocaleString(),
       end:   new Date((event.item.end   as number) * 1000).toLocaleString()
     };
 
-    // Pre-compute the display strings for the moved item
-    const newStart = format(new Date((event.item.start as number) * 1000), 'dd MMM yyyy HH:mm:ss');
-    const newEnd   = format(new Date((event.item.end   as number) * 1000), 'dd MMM yyyy HH:mm:ss');
+    // Mutate in-place to avoid triggering ngOnChanges which resets scroll + expand state.
+    if (originalItem) { originalItem.start = newStart; originalItem.end = newEnd; }
+    const origInOriginal = this.originalItems.find(i => i.id === event.item.id) as any;
+    if (origInOriginal) { origInOriginal.start = newStart; origInOriginal.end = newEnd; }
+
+    // Wait for the library to finish its internal drag cleanup, then re-apply collapsed state.
+    setTimeout(() => this.restoreCollapsedGroups(), 16);
 
     this.ds.updateTask(adjustedItem).subscribe({
-      next: () => {
-        // Mutate the item in-place: same array reference keeps ngOnChanges
-        // from firing, but updated dates prevent CD re-renders from snapping
-        // the bar back to its old position.
-        const idx = this.items.findIndex(i => i.id === event.item.id);
-        if (idx >= 0) {
-          (this.items[idx] as any).start = newStart;
-          (this.items[idx] as any).end   = newEnd;
-        }
-        this.originalItems = this.originalItems.map(i =>
-          i.id === event.item.id ? { ...i, start: newStart, end: newEnd } : i
-        ) as any[];
-      },
       error: () => this.loadChart(true)
     });
   }
@@ -595,14 +632,16 @@ export class DashboardComponent implements AfterViewInit {
     dialogRef.afterClosed().subscribe((result: any) => { if (result) this.loadChart(true); });
   }
 
+  collapseAllGroups(): void {
+    this.ganttComponent.collapseAll();
+    // collapseAll() doesn't fire (expandChange), so populate the Set manually
+    const groups: any[] = (this.ganttComponent as any).groups ?? [];
+    this.collapsedGroupIds = new Set(groups.map((g: any) => g.id));
+  }
+
   expandAllGroups(): void {
-    if (this.expanded) {
-      this.expanded = false;
-      this.ganttComponent.collapseAll();
-    } else {
-      this.expanded = true;
-      this.ganttComponent.expandAll();
-    }
+    this.ganttComponent.expandAll();
+    this.collapsedGroupIds = new Set();
   }
 
   scrollToToday(): void {
