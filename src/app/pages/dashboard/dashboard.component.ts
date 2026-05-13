@@ -163,9 +163,7 @@ export class DashboardComponent implements AfterViewInit {
           start: format(item.start, 'dd MMM yyyy HH:mm:ss'),
           end:   format(item.end,   'dd MMM yyyy HH:mm:ss')
         }));
-        this.groups = data.groups.map((g: any) =>
-          this.collapsedGroupIds.has(g.id) ? { ...g, expanded: false } : g
-        );
+        this.groups = data.groups;
         this.items  = formattedItems;
         this.items.forEach(task => {
           task.foreman   = this.getManagerName(task.id);
@@ -174,14 +172,25 @@ export class DashboardComponent implements AfterViewInit {
         });
         this.originalGroups = [...this.groups];
         this.originalItems  = [...this.items];
-        this.showGantt = false;
-        setTimeout(() => {
-          this.showGantt = true;
+
+        if (this.showGantt) {
+          // Gantt is already rendered — update data in-place so ngx-gantt's ngOnChanges
+          // fires while the component is alive; it reads current collapse state from its
+          // internal groups and preserves it automatically (no destroy/recreate needed).
           setTimeout(() => {
             this.addWeekendShading();
             this.ganttComponent?.scrollToToday();
           }, 300);
-        }, 30);
+        } else {
+          // Initial load — show the gantt for the first time.
+          setTimeout(() => {
+            this.showGantt = true;
+            setTimeout(() => {
+              this.addWeekendShading();
+              this.ganttComponent?.scrollToToday();
+            }, 300);
+          }, 30);
+        }
       });
     });
   }
@@ -202,15 +211,14 @@ export class DashboardComponent implements AfterViewInit {
   }
 
   private applyZoom(): void {
+    // Updating viewOptions triggers ngOnChanges → changeView() inside ngx-gantt,
+    // which re-renders at the new cellWidth while keeping the component alive,
+    // so collapse state is preserved without any destroy/recreate cycle.
     this.viewOptions = { ...this.viewOptions, cellWidth: this.zoomCellWidth };
-    this.showGantt = false;
     setTimeout(() => {
-      this.showGantt = true;
-      setTimeout(() => {
-        this.addWeekendShading();
-        this.ganttComponent?.scrollToToday();
-      }, 300);
-    }, 30);
+      this.addWeekendShading();
+      this.ganttComponent?.scrollToToday();
+    }, 300);
   }
 
   addWeekendShading(): void {
