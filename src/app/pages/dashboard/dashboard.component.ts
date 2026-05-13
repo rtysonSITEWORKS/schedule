@@ -49,7 +49,8 @@ export class DashboardComponent implements AfterViewInit {
 
   foremanFilters: any[] = [];
 
-  expanded  = true;
+  /** Tracks which group IDs the user has collapsed — persists across loadChart/zoom re-renders */
+  collapsedGroupIds: Set<any> = new Set();
   showGantt = false; // stays false until data loads + column widths are calculated
 
   // Column widths — fixed at these values across all zoom levels
@@ -162,7 +163,9 @@ export class DashboardComponent implements AfterViewInit {
           start: format(item.start, 'dd MMM yyyy HH:mm:ss'),
           end:   format(item.end,   'dd MMM yyyy HH:mm:ss')
         }));
-        this.groups = data.groups;
+        this.groups = data.groups.map((g: any) =>
+          this.collapsedGroupIds.has(g.id) ? { ...g, expanded: false } : g
+        );
         this.items  = formattedItems;
         this.items.forEach(task => {
           task.foreman   = this.getManagerName(task.id);
@@ -575,14 +578,28 @@ export class DashboardComponent implements AfterViewInit {
     dialogRef.afterClosed().subscribe((result: any) => { if (result) this.loadChart(); });
   }
 
+  collapseAllGroups(): void {
+    this.collapsedGroupIds = new Set(this.groups.map(g => g.id));
+    this.groups.forEach(g => (g as any).expanded = false);
+    this.ganttComponent?.collapseAll();
+  }
+
   expandAllGroups(): void {
-    if (this.expanded) {
-      this.expanded = false;
-      this.ganttComponent.collapseAll();
+    this.collapsedGroupIds = new Set();
+    this.groups.forEach(g => (g as any).expanded = true);
+    this.ganttComponent?.expandAll();
+  }
+
+  onGroupExpandChange(event: any): void {
+    const groupId  = event.id ?? event.group?.id;
+    const expanded = event.expanded ?? !this.collapsedGroupIds.has(groupId);
+    if (expanded) {
+      this.collapsedGroupIds.delete(groupId);
     } else {
-      this.expanded = true;
-      this.ganttComponent.expandAll();
+      this.collapsedGroupIds.add(groupId);
     }
+    const group = this.groups.find(g => g.id === groupId);
+    if (group) (group as any).expanded = expanded;
   }
 
   scrollToToday(): void {

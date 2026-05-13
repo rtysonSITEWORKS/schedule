@@ -126,27 +126,28 @@ export class ExportPdfComponent implements OnInit {
     if (totalDays <= 0) return null;
 
     const TW        = 710;
-    const LABEL_W   = 130;
+    const TASK_W    = 100;   // left label column: task name
+    const FOREMAN_W = 110;   // second label column: foreman name
+    const LABEL_W   = TASK_W + FOREMAN_W;  // 210
     const RIGHT_PAD = 10;
     const BAR_W     = TW - LABEL_W - 2 - RIGHT_PAD;
-    const MONTH_H   = 20;   // top row: month labels
-    const DAY_H     = 16;   // second row: day number ticks
+    const MONTH_H   = 20;
+    const DAY_H     = 16;
     const HDR_H     = MONTH_H + DAY_H;
-    const ROW_H     = 18;
-    const BAR_H     = 12;
+    const ROW_H     = 22;   // taller rows to accommodate two lines of bar text
+    const BAR_H     = 14;   // taller bar to hold title + action text overlay
     const SVG_H     = HDR_H + rows.length * ROW_H + 2;
 
     const xFor = (d: Date): number =>
       LABEL_W + (differenceInCalendarDays(d, rangeStart) / totalDays) * BAR_W;
 
-    // Pick day-tick interval so labels don't overlap (min ~14px per tick)
+    // Pick day-tick interval so labels don't overlap
     const pxPerDay = BAR_W / totalDays;
-    const interval = pxPerDay >= 7  ? 1
-                   : pxPerDay >= 3  ? 7
+    const interval = pxPerDay >= 7   ? 1
+                   : pxPerDay >= 3   ? 7
                    : pxPerDay >= 1.5 ? 14
-                   : 30;
+                   :                   30;
 
-    // Build list of tick dates — start exactly at rangeStart, step by interval
     const ticks: Date[] = [];
     const t = new Date(rangeStart);
     while (t <= rangeEnd) {
@@ -156,24 +157,31 @@ export class ExportPdfComponent implements OnInit {
 
     let s = `<svg xmlns="http://www.w3.org/2000/svg" width="${TW}" height="${SVG_H}">`;
 
-    // Overall background + label column
+    // ── Backgrounds ──────────────────────────────────────────────────────────
     s += `<rect width="${TW}" height="${SVG_H}" fill="#f5f7fa"/>`;
-    s += `<rect x="0" y="${HDR_H}" width="${LABEL_W}" height="${SVG_H - HDR_H}" fill="#eceff4"/>`;
+    s += `<rect x="0" y="${HDR_H}" width="${TASK_W}" height="${SVG_H - HDR_H}" fill="#eceff4"/>`;
+    s += `<rect x="${TASK_W}" y="${HDR_H}" width="${FOREMAN_W}" height="${SVG_H - HDR_H}" fill="#e8ecf4"/>`;
 
-    // ── Month header row (top) ────────────────────────────────────────────
+    // ── Month header row ─────────────────────────────────────────────────────
     s += `<rect width="${TW}" height="${MONTH_H}" fill="#2c3e50"/>`;
-    // Light label column override so task names don't sit on dark header
     s += `<rect x="0" y="0" width="${LABEL_W}" height="${HDR_H}" fill="#f0f2f5"/>`;
-    // Start the month cursor at the month containing rangeStart
+
+    // Column header labels
+    s += `<text x="${(TASK_W / 2).toFixed(1)}" y="${HDR_H - 4}" text-anchor="middle" font-family="Helvetica" font-size="6" font-weight="bold" fill="#546e7a">Task</text>`;
+    s += `<text x="${(TASK_W + FOREMAN_W / 2).toFixed(1)}" y="${HDR_H - 4}" text-anchor="middle" font-family="Helvetica" font-size="6" font-weight="bold" fill="#546e7a">Foreman</text>`;
+
+    // Vertical dividers for label columns
+    s += `<line x1="${TASK_W}" y1="0" x2="${TASK_W}" y2="${SVG_H}" stroke="#c8d0dc" stroke-width="0.6"/>`;
+    s += `<line x1="${LABEL_W}" y1="0" x2="${LABEL_W}" y2="${SVG_H}" stroke="#c8d0dc" stroke-width="0.6"/>`;
+
+    // Month labels
     let cur = new Date(rangeStart.getFullYear(), rangeStart.getMonth(), 1);
     while (cur <= rangeEnd) {
-      const nextM  = new Date(cur.getFullYear(), cur.getMonth() + 1, 1);
-      // Clamp label span to the visible window
-      const xSegStart = Math.max(xFor(cur),    LABEL_W);
-      const xSegEnd   = Math.min(xFor(nextM),  TW);
+      const nextM     = new Date(cur.getFullYear(), cur.getMonth() + 1, 1);
+      const xSegStart = Math.max(xFor(cur),   LABEL_W);
+      const xSegEnd   = Math.min(xFor(nextM), TW);
       const xMid      = (xSegStart + xSegEnd) / 2;
-      // Month boundary separator (skip the very first edge at rangeStart)
-      const xBound = xFor(cur);
+      const xBound    = xFor(cur);
       if (xBound > LABEL_W + 1) {
         s += `<line x1="${xBound.toFixed(1)}" y1="0" x2="${xBound.toFixed(1)}" y2="${MONTH_H}" stroke="#455a64" stroke-width="0.8"/>`;
       }
@@ -181,22 +189,17 @@ export class ExportPdfComponent implements OnInit {
       cur = nextM;
     }
 
-    // ── Day-number sub-header row ─────────────────────────────────────────
+    // ── Day-number sub-header ────────────────────────────────────────────────
     s += `<rect y="${MONTH_H}" width="${TW}" height="${DAY_H}" fill="#37474f"/>`;
-
     ticks.forEach(tick => {
       const x = xFor(tick);
       if (x < LABEL_W) return;
-      const dayNum = String(tick.getDate());
-      // Day number centered in sub-header row
-      s += `<text x="${x.toFixed(1)}" y="${MONTH_H + Math.floor(DAY_H / 2) + 3}" text-anchor="middle" font-family="Helvetica" font-size="6.5" fill="#b0bec5">${esc(dayNum)}</text>`;
-      // Tick hash at bottom of sub-header, pointing into chart area
+      s += `<text x="${x.toFixed(1)}" y="${MONTH_H + Math.floor(DAY_H / 2) + 3}" text-anchor="middle" font-family="Helvetica" font-size="6.5" fill="#b0bec5">${esc(String(tick.getDate()))}</text>`;
       s += `<line x1="${x.toFixed(1)}" y1="${HDR_H - 4}" x2="${x.toFixed(1)}" y2="${HDR_H}" stroke="#90a4ae" stroke-width="0.8"/>`;
-      // Vertical column line through task rows
       s += `<line x1="${x.toFixed(1)}" y1="${HDR_H}" x2="${x.toFixed(1)}" y2="${SVG_H}" stroke="#d8dde6" stroke-width="0.4"/>`;
     });
 
-    // Month boundary lines through task rows (slightly stronger)
+    // Month boundary lines through task rows
     let curM = new Date(rangeStart.getFullYear(), rangeStart.getMonth() + 1, 1);
     while (curM < rangeEnd) {
       const xM = xFor(curM);
@@ -206,7 +209,7 @@ export class ExportPdfComponent implements OnInit {
       curM = new Date(curM.getFullYear(), curM.getMonth() + 1, 1);
     }
 
-    // ── Task rows ─────────────────────────────────────────────────────────
+    // ── Task rows ────────────────────────────────────────────────────────────
     rows.forEach(({ item, start, end, label }, idx) => {
       const rowY  = HDR_H + idx * ROW_H;
       const barY  = rowY + Math.floor((ROW_H - BAR_H) / 2);
@@ -214,18 +217,52 @@ export class ExportPdfComponent implements OnInit {
 
       s += `<rect x="${LABEL_W}" y="${rowY}" width="${BAR_W + 2}" height="${ROW_H}" fill="${rowBg}"/>`;
 
-      const lbl = label.length > 23 ? label.slice(0, 21) + '\u2026' : label;
-      s += `<text x="4" y="${rowY + ROW_H - 5}" font-family="Helvetica" font-size="7.5" fill="#2c3e50">${esc(lbl)}</text>`;
+      // Task name in label column
+      s += `<text x="4" y="${rowY + ROW_H - 6}" font-family="Helvetica" font-size="6.5" fill="#2c3e50">${esc(label)}</text>`;
 
-      const x1    = Math.max(xFor(start!), LABEL_W);
-      const x2    = Math.min(xFor(end!),   TW - 1);
-      const barW  = Math.max(x2 - x1, 2);
+      // Foreman name in foreman column
+      const foremanRaw = this.data.nameDictionary[item.id] ?? '';
+      s += `<text x="${TASK_W + 4}" y="${rowY + ROW_H - 6}" font-family="Helvetica" font-size="6.5" fill="#37474f">${esc(foremanRaw)}</text>`;
+
+      const x1   = Math.max(xFor(start!), LABEL_W);
+      const x2   = Math.min(xFor(end!),   TW - 1);
+      const barW = Math.max(x2 - x1, 2);
 
       const barColor = item.color === '#FF0000' ? '#c0392b'
                      : item.color === '#E1CA00' ? '#d4ac0d'
                      : '#2e78d6';
 
+      // Bar shape
       s += `<rect x="${x1.toFixed(1)}" y="${barY}" width="${barW.toFixed(1)}" height="${BAR_H}" rx="2" ry="2" fill="${barColor}"/>`;
+
+      // ── Bar text overlay ──────────────────────────────────────────────────
+      // Black text on all bars — matches the live schedule appearance
+      const textColor     = '#000000';
+      const barMidX       = (x1 + x2) / 2;
+      const hasActionText = !!(item.actionText && item.actionText.trim());
+
+      if (barW >= 24) {
+        // Approximate char width at font-size 5.5: ~3.3 px/char
+        const maxTitleChars  = Math.max(0, Math.floor((barW - 6) / 3.3));
+        const titleLabel     = maxTitleChars > 2
+                               ? (label.length > maxTitleChars ? label.slice(0, maxTitleChars - 1) + '…' : label)
+                               : '';
+
+        if (hasActionText && barW >= 60) {
+          // Two-line: task title bold on line 1, action text italic on line 2
+          const maxActionChars = Math.max(0, Math.floor((barW - 6) / 3.0));
+          const actionLabel    = item.actionText.length > maxActionChars
+                                 ? item.actionText.slice(0, maxActionChars - 1) + '…'
+                                 : item.actionText;
+          if (titleLabel) {
+            s += `<text x="${barMidX.toFixed(1)}" y="${(barY + 6).toFixed(1)}" text-anchor="middle" font-family="Helvetica" font-size="5.5" font-weight="bold" fill="${textColor}">${esc(titleLabel)}</text>`;
+          }
+          s += `<text x="${barMidX.toFixed(1)}" y="${(barY + 12).toFixed(1)}" text-anchor="middle" font-family="Helvetica" font-size="5" font-style="italic" fill="${textColor}">${esc(actionLabel)}</text>`;
+        } else if (titleLabel) {
+          // Single-line: title centered vertically in bar
+          s += `<text x="${barMidX.toFixed(1)}" y="${(barY + 9.5).toFixed(1)}" text-anchor="middle" font-family="Helvetica" font-size="6" font-weight="bold" fill="${textColor}">${esc(titleLabel)}</text>`;
+        }
+      }
     });
 
     s += `<line x1="0" y1="${SVG_H - 1}" x2="${TW}" y2="${SVG_H - 1}" stroke="#c8d0dc" stroke-width="0.5"/>`;
@@ -380,7 +417,7 @@ export class ExportPdfComponent implements OnInit {
       footer: (currentPage: number, pageCount: number) => ({
         columns: [
           { text: 'CONFIDENTIAL — For internal distribution only', fontSize: 7, color: '#aaaaaa', margin: [30, 10, 0, 0] },
-          { text: `Page ${currentPage} of ${pageCount}`,           fontSize: 7, color: '#aaaaaa', alignment: 'right', margin: [0, 10, 30, 0] }
+          { text: `Page ${currentPage} of ${pageCount}`,                fontSize: 7, color: '#aaaaaa', alignment: 'right', margin: [0, 10, 30, 0] }
         ]
       }),
 
